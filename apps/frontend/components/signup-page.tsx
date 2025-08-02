@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { SignInPage, type Testimonial } from "@/components/ui/sign-in"
+import { BackNavigation } from "@/components/ui/back-navigation"
 import { useRouter } from "next/navigation"
 
 const civicTestimonials: Testimonial[] = [
@@ -70,15 +71,22 @@ export function SignupPage() {
   }
 
   return (
-    <SignInPage
-      mode="signup"
-      title={<span className="font-light text-white tracking-tighter">Join CivicTrack</span>}
-      description="Create your account and start making a difference in your community today"
-      heroImageSrc="https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=2160&q=80"
-      testimonials={civicTestimonials}
-      onSignIn={handleSignUp}
-      onGoogleSignIn={handleGoogleSignIn}
-      onCreateAccount={handleCreateAccount}
-    />
+    <div className="relative">
+      {/* Back Navigation */}
+      <div className="absolute top-6 left-6 z-10">
+        <BackNavigation />
+      </div>
+      
+      <SignInPage
+        mode="signup"
+        title={<span className="font-light text-white tracking-tighter">Join CivicTrack</span>}
+        description="Create your account and start making a difference in your community today"
+        heroImageSrc="https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=2160&q=80"
+        testimonials={civicTestimonials}
+        onSignIn={handleSignUp}
+        onGoogleSignIn={handleGoogleSignIn}
+        onCreateAccount={handleCreateAccount}
+      />
+    </div>
   )
 }

@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { SignInPage, type Testimonial } from "@/components/ui/sign-in"
+import { BackNavigation } from "@/components/ui/back-navigation"
 import { useRouter } from "next/navigation"
 
 const civicTestimonials: Testimonial[] = [
@@ -73,16 +74,23 @@ export function LoginPage() {
   }
 
   return (
-    <SignInPage
-      mode="signin"
-      title={<span className="font-light text-white tracking-tighter">Welcome Back</span>}
-      description="Sign in to continue reporting and tracking civic issues in your community"
-      heroImageSrc="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=2160&q=80"
-      testimonials={civicTestimonials}
-      onSignIn={handleSignIn}
-      onGoogleSignIn={handleGoogleSignIn}
-      onResetPassword={handleResetPassword}
-      onCreateAccount={handleCreateAccount}
-    />
+    <div className="relative">
+      {/* Back Navigation */}
+      <div className="absolute top-6 left-6 z-10">
+        <BackNavigation />
+      </div>
+      
+      <SignInPage
+        mode="signin"
+        title={<span className="font-light text-white tracking-tighter">Welcome Back</span>}
+        description="Sign in to continue reporting and tracking civic issues in your community"
+        heroImageSrc="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=2160&q=80"
+        testimonials={civicTestimonials}
+        onSignIn={handleSignIn}
+        onGoogleSignIn={handleGoogleSignIn}
+        onResetPassword={handleResetPassword}
+        onCreateAccount={handleCreateAccount}
+      />
+    </div>
   )
 }
