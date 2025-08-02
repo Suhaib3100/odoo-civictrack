@@ -3,14 +3,13 @@
 import { useState, useEffect } from "react"
 import { IssueMap } from "@/components/map/issue-map"
 import { Issue, Location } from "@/types/map"
-import { Loader2, MapPin, AlertCircle, Navigation, Filter, Info, Search, X, Settings, Plus, LogOut, User } from "lucide-react"
+import { Loader2, MapPin, AlertCircle, Navigation, Filter, Info, Search, X, Settings, Plus, LogOut, User, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ProtectedRoute } from "@/components/protected-route"
 import { useAuth } from "@/contexts/auth-context"
-import { api } from "@/lib/api"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -225,14 +224,24 @@ function MapPageContent() {
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-black flex items-center justify-center">
+      <div className="h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
         <div className="text-center">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <Navigation className="w-8 h-8 text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          <div className="relative mb-8">
+            <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 w-20 h-20 border-4 border-blue-400/30 border-t-transparent rounded-full animate-spin mx-auto" style={{ animationDelay: '-0.5s' }}></div>
+            <Navigation className="w-10 h-10 text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
-          <h2 className="text-white text-xl font-semibold mb-2">Getting Your Location</h2>
-          <p className="text-gray-400 text-sm">Please allow location access for accurate results</p>
+          <h2 className="text-white text-2xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Locating Your Area
+          </h2>
+          <p className="text-gray-400 text-lg max-w-md mx-auto leading-relaxed">
+            We're pinpointing your location to show you the most relevant community issues
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-2 text-blue-400">
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+          </div>
         </div>
       </div>
     )
@@ -240,15 +249,22 @@ function MapPageContent() {
 
   if (error && !userLocation) {
     return (
-      <div className="h-screen bg-black flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-8">
-            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-6" />
-            <h2 className="text-red-400 text-2xl font-semibold mb-4">Location Error</h2>
-            <p className="text-gray-300 mb-6 text-lg">{error}</p>
+      <div className="h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
+        <div className="text-center max-w-lg mx-auto px-6">
+          <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 rounded-2xl p-10 backdrop-blur-sm">
+            <div className="relative mb-8">
+              <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
+                <AlertCircle className="w-10 h-10 text-red-400" />
+              </div>
+              <div className="absolute inset-0 w-20 h-20 bg-red-400/10 rounded-full animate-ping"></div>
+            </div>
+            <h2 className="text-red-400 text-3xl font-bold mb-4 bg-gradient-to-r from-red-400 to-pink-400 bg-clip-text text-transparent">
+              Location Unavailable
+            </h2>
+            <p className="text-gray-300 mb-8 text-lg leading-relaxed">{error}</p>
             <Button
               onClick={() => window.location.reload()}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-4 rounded-xl transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Try Again
             </Button>
@@ -260,38 +276,53 @@ function MapPageContent() {
 
   if (!userLocation) {
     return (
-      <div className="h-screen bg-black flex items-center justify-center">
+      <div className="h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
         <div className="text-center">
-          <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-          <h2 className="text-white text-xl font-semibold">Unable to determine your location</h2>
+          <div className="relative mb-8">
+            <div className="w-20 h-20 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto">
+              <MapPin className="w-10 h-10 text-gray-400" />
+            </div>
+            <div className="absolute inset-0 w-20 h-20 bg-gray-400/10 rounded-full animate-pulse"></div>
+          </div>
+          <h2 className="text-white text-3xl font-bold mb-4 bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent">
+            Location Not Found
+          </h2>
+          <p className="text-gray-400 text-lg max-w-md mx-auto">
+            We couldn't determine your location. Please check your browser settings.
+          </p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-screen bg-black flex">
+    <div className="h-screen bg-gradient-to-br from-black via-gray-900 to-black flex overflow-hidden">
       {/* Left Panel - Search & Filters */}
-      <div className="w-1/2 bg-gray-900 border-r border-gray-800 flex flex-col">
+      <div className="w-1/2 bg-gradient-to-b from-gray-900/95 to-black/95 backdrop-blur-sm border-r border-gray-800/50 flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-800">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                <Navigation className="w-6 h-6 text-white" />
+        <div className="p-8 border-b border-gray-800/50 bg-gradient-to-r from-gray-900/50 to-black/50">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Navigation className="w-7 h-7 text-white" />
+                </div>
+                <div className="absolute inset-0 w-12 h-12 bg-blue-400/20 rounded-xl animate-pulse"></div>
               </div>
               <div>
-                <h1 className="text-white text-xl font-bold">Community Issues</h1>
-                <p className="text-gray-400 text-sm">Find and report local issues</p>
+                <h1 className="text-white text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Community Issues
+                </h1>
+                <p className="text-gray-400 text-sm font-medium">Discover and report local problems</p>
               </div>
             </div>
             
             {/* User Menu */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Button
                 onClick={handleReportIssue}
                 size="sm"
-                className="bg-blue-500 hover:bg-blue-600 text-white"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Report Issue
@@ -301,23 +332,25 @@ function MapPageContent() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-300 hover:text-white"
+                  className="w-12 h-12 p-0 rounded-xl bg-gradient-to-br from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 border border-gray-700/50 transition-all duration-300"
                 >
-                  <User className="w-4 h-4" />
+                  <User className="w-5 h-5 text-gray-300" />
                 </Button>
                 
                 {/* Dropdown Menu */}
-                <div className="absolute right-0 top-full mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <div className="p-2">
-                    <div className="px-3 py-2 text-sm text-gray-300 border-b border-gray-700">
-                      {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email}
-                    </div>
+                <div className="absolute right-0 top-14 w-56 bg-gradient-to-br from-gray-800/95 to-gray-900/95 backdrop-blur-sm border border-gray-700/50 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                  <div className="p-4 border-b border-gray-700/50">
+                    <p className="text-white font-semibold text-sm">{user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email}</p>
+                    <p className="text-gray-400 text-xs mt-1">{user?.email}</p>
+                  </div>
+                  <div className="p-3 space-y-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={handleMyIssues}
-                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700"
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-200"
                     >
+                      <FileText className="w-4 h-4 mr-3" />
                       My Issues
                     </Button>
                     {isAdmin && (
@@ -325,20 +358,23 @@ function MapPageContent() {
                         variant="ghost"
                         size="sm"
                         onClick={handleAdminPanel}
-                        className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700"
+                        className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-200"
                       >
+                        <Settings className="w-4 h-4 mr-3" />
                         Admin Panel
                       </Button>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleLogout}
-                      className="w-full justify-start text-red-300 hover:text-red-200 hover:bg-red-500/10"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </Button>
+                    <div className="border-t border-gray-700/50 pt-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="w-full justify-start text-red-300 hover:text-red-200 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        Logout
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -347,72 +383,76 @@ function MapPageContent() {
 
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <Input
-              placeholder="Search issues..."
+              placeholder="Search for issues, categories, or locations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
+              className="pl-12 pr-4 py-3 bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-gray-700/50 text-white placeholder-gray-400 focus:border-blue-500/50 focus:bg-gray-800/70 rounded-xl transition-all duration-300 text-lg"
             />
           </div>
         </div>
 
         {/* Filters Section */}
-        <div className="p-6 space-y-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <h2 className="text-white font-semibold">Filters</h2>
+        <div className="p-8 space-y-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
+              <Filter className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="text-white text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              Filters & Options
+            </h2>
           </div>
 
           {/* Status Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Status</label>
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Issue Status</label>
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue />
+              <SelectTrigger className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-gray-700/50 text-white rounded-xl py-3 hover:border-blue-500/50 transition-all duration-300">
+                <SelectValue placeholder="Select status" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Reported">Reported</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Resolved">Resolved</SelectItem>
+              <SelectContent className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700/50 rounded-xl">
+                <SelectItem value="all" className="text-white hover:bg-gray-700/50">All Status</SelectItem>
+                <SelectItem value="Reported" className="text-white hover:bg-gray-700/50">Reported</SelectItem>
+                <SelectItem value="In Progress" className="text-white hover:bg-gray-700/50">In Progress</SelectItem>
+                <SelectItem value="Resolved" className="text-white hover:bg-gray-700/50">Resolved</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Category Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Category</label>
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Issue Category</label>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue />
+              <SelectTrigger className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-gray-700/50 text-white rounded-xl py-3 hover:border-purple-500/50 transition-all duration-300">
+                <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="Roads & Infrastructure">Roads & Infrastructure</SelectItem>
-                <SelectItem value="Water & Utilities">Water & Utilities</SelectItem>
-                <SelectItem value="Lighting">Lighting</SelectItem>
-                <SelectItem value="Waste Management">Waste Management</SelectItem>
-                <SelectItem value="Parks & Environment">Parks & Environment</SelectItem>
-                <SelectItem value="Safety & Security">Safety & Security</SelectItem>
-                <SelectItem value="Public Buildings">Public Buildings</SelectItem>
-                <SelectItem value="Transportation">Transportation</SelectItem>
+              <SelectContent className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700/50 rounded-xl">
+                <SelectItem value="all" className="text-white hover:bg-gray-700/50">All Categories</SelectItem>
+                <SelectItem value="Roads & Infrastructure" className="text-white hover:bg-gray-700/50">Roads & Infrastructure</SelectItem>
+                <SelectItem value="Water & Utilities" className="text-white hover:bg-gray-700/50">Water & Utilities</SelectItem>
+                <SelectItem value="Lighting" className="text-white hover:bg-gray-700/50">Lighting</SelectItem>
+                <SelectItem value="Waste Management" className="text-white hover:bg-gray-700/50">Waste Management</SelectItem>
+                <SelectItem value="Parks & Environment" className="text-white hover:bg-gray-700/50">Parks & Environment</SelectItem>
+                <SelectItem value="Safety & Security" className="text-white hover:bg-gray-700/50">Safety & Security</SelectItem>
+                <SelectItem value="Public Buildings" className="text-white hover:bg-gray-700/50">Public Buildings</SelectItem>
+                <SelectItem value="Transportation" className="text-white hover:bg-gray-700/50">Transportation</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Distance Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">Distance</label>
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Distance Range</label>
             <Select value={selectedDistance} onValueChange={setSelectedDistance}>
-              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue />
+              <SelectTrigger className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-gray-700/50 text-white rounded-xl py-3 hover:border-green-500/50 transition-all duration-300">
+                <SelectValue placeholder="Select distance" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="all">All Distances</SelectItem>
-                <SelectItem value="1km">Within 1km</SelectItem>
-                <SelectItem value="3km">Within 3km</SelectItem>
-                <SelectItem value="5km">Within 5km</SelectItem>
+              <SelectContent className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700/50 rounded-xl">
+                <SelectItem value="all" className="text-white hover:bg-gray-700/50">All Distances</SelectItem>
+                <SelectItem value="1km" className="text-white hover:bg-gray-700/50">Within 1km</SelectItem>
+                <SelectItem value="3km" className="text-white hover:bg-gray-700/50">Within 3km</SelectItem>
+                <SelectItem value="5km" className="text-white hover:bg-gray-700/50">Within 5km</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -427,7 +467,7 @@ function MapPageContent() {
                 setSelectedDistance("all")
                 setSearchQuery("")
               }}
-              className="w-full bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
+              className="w-full bg-gradient-to-r from-gray-800/50 to-gray-900/50 border border-gray-700/50 text-gray-300 hover:bg-gray-700/70 hover:border-red-500/50 rounded-xl py-3 transition-all duration-300 font-semibold"
             >
               <X className="w-4 h-4 mr-2" />
               Clear All Filters
@@ -436,25 +476,25 @@ function MapPageContent() {
         </div>
 
         {/* Active Filters */}
-        <div className="px-6 pb-6">
-          <div className="flex flex-wrap gap-2">
+        <div className="px-8 pb-6">
+          <div className="flex flex-wrap gap-3">
             {selectedStatus !== "all" && (
-              <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+              <Badge className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-300 border-blue-500/30 px-3 py-1 rounded-full font-medium">
                 {selectedStatus}
               </Badge>
             )}
             {selectedCategory !== "all" && (
-              <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
+              <Badge className="bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-300 border-green-500/30 px-3 py-1 rounded-full font-medium">
                 {selectedCategory}
               </Badge>
             )}
             {selectedDistance !== "all" && (
-              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+              <Badge className="bg-gradient-to-r from-purple-500/20 to-purple-600/20 text-purple-300 border-purple-500/30 px-3 py-1 rounded-full font-medium">
                 {selectedDistance}
               </Badge>
             )}
             {searchQuery && (
-              <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
+              <Badge className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-300 border-yellow-500/30 px-3 py-1 rounded-full font-medium">
                 Search: {searchQuery}
               </Badge>
             )}
@@ -462,25 +502,31 @@ function MapPageContent() {
         </div>
 
         {/* Location Info */}
-        <div className="mt-auto p-6 border-t border-gray-800">
-          <div className="flex items-center gap-2 mb-3">
-            <Settings className="w-4 h-4 text-gray-400" />
-            <span className="text-sm font-medium text-gray-300">Location Info</span>
+        <div className="mt-auto p-8 border-t border-gray-800/50 bg-gradient-to-r from-gray-900/30 to-black/30">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Settings className="w-3 h-3 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Location Details</span>
           </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-400">Source:</span>
-              <span className="text-white font-medium">{locationSource}</span>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-800/30 to-gray-900/30 rounded-lg border border-gray-700/30">
+              <span className="text-gray-400 font-medium">Source:</span>
+              <span className="text-white font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                {locationSource}
+              </span>
             </div>
             {locationAccuracy && (
-              <div className="flex justify-between">
-                <span className="text-gray-400">Accuracy:</span>
-                <span className="text-white font-medium">±{Math.round(locationAccuracy)}m</span>
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-800/30 to-gray-900/30 rounded-lg border border-gray-700/30">
+                <span className="text-gray-400 font-medium">Accuracy:</span>
+                <span className="text-white font-semibold">±{Math.round(locationAccuracy)}m</span>
               </div>
             )}
-            <div className="flex justify-between">
-              <span className="text-gray-400">Issues Found:</span>
-              <span className="text-white font-medium">{demoIssues.length}</span>
+            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-gray-800/30 to-gray-900/30 rounded-lg border border-gray-700/30">
+              <span className="text-gray-400 font-medium">Issues Found:</span>
+              <span className="text-white font-semibold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+                {demoIssues.length}
+              </span>
             </div>
           </div>
         </div>
@@ -503,8 +549,6 @@ function MapPageContent() {
         <IssueMap 
           issues={demoIssues} 
           userLocation={userLocation}
-          locationAccuracy={locationAccuracy}
-          locationSource={locationSource}
         />
       </div>
     </div>
