@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { apiService, type Issue } from "@/lib/api"
 
 const mockUserIssues = [
   {
@@ -104,6 +105,79 @@ export function MyIssuesPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [sortBy, setSortBy] = useState("newest")
+  const [apiIssues, setApiIssues] = useState<Issue[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch issues from API
+  useEffect(() => {
+    const fetchIssues = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const response = await apiService.getIssues({ limit: 100 }) // Get more issues
+        setApiIssues(response.data.issues)
+      } catch (err) {
+        console.error('Failed to fetch issues:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch issues')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchIssues()
+  }, [])
+
+  // Convert API issues to match mock data format
+  const convertApiIssueToMockFormat = (issue: Issue) => {
+    // Map backend categories to frontend display names
+    const categoryMap: Record<string, string> = {
+      'INFRASTRUCTURE': 'Roads & Infrastructure',
+      'UTILITIES': 'Water & Utilities',
+      'PUBLIC_SERVICES': 'Waste Management',
+      'SAFETY': 'Safety & Security',
+      'ENVIRONMENT': 'Parks & Environment',
+      'TRANSPORTATION': 'Public Transport',
+      'OTHER': 'Other'
+    }
+
+    // Map backend status to frontend status
+    const statusMap: Record<string, string> = {
+      'REPORTED': 'Reported',
+      'IN_PROGRESS': 'In Progress',
+      'RESOLVED': 'Resolved',
+      'CLOSED': 'Resolved'
+    }
+
+    // Map backend priority to frontend priority
+    const priorityMap: Record<string, string> = {
+      'LOW': 'Low',
+      'MEDIUM': 'Medium',
+      'HIGH': 'High',
+      'URGENT': 'High'
+    }
+
+    return {
+      id: parseInt(issue.id) || Math.random(), // Convert string ID to number for compatibility
+      title: issue.title,
+      description: issue.description,
+      category: categoryMap[issue.category] || issue.category,
+      status: statusMap[issue.status] || 'Reported',
+      priority: priorityMap[issue.priority] || 'Medium',
+      reportedAt: issue.createdAt,
+      location: issue.address || 'Location not specified',
+      image: issue.images?.[0] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop", // Default image
+      votes: issue._count?.votes || 0,
+      comments: issue._count?.comments || 0,
+      views: Math.floor(Math.random() * 200) + 10, // Random views for now
+    }
+  }
+
+  // Combine API issues with mock data
+  const allIssues = [
+    ...apiIssues.map(convertApiIssueToMockFormat),
+    ...mockUserIssues
+  ]
 
   const getStatusColor = (status: string) => {
     switch (status) {

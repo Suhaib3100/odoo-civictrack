@@ -29,24 +29,28 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { apiService } from "@/lib/api"
+import { authService } from "@/lib/auth"
 
+// Map frontend categories to backend categories
 const categories = [
-  { value: "roads", label: "Roads & Infrastructure", icon: "🛣️" },
-  { value: "lighting", label: "Street Lighting", icon: "💡" },
-  { value: "water", label: "Water & Utilities", icon: "💧" },
-  { value: "waste", label: "Waste Management", icon: "🗑️" },
-  { value: "safety", label: "Safety & Security", icon: "🛡️" },
-  { value: "parks", label: "Parks & Environment", icon: "🌳" },
-  { value: "transport", label: "Public Transport", icon: "🚌" },
-  { value: "buildings", label: "Public Buildings", icon: "🏢" },
-  { value: "other", label: "Other", icon: "📋" },
+  { value: "INFRASTRUCTURE", label: "Roads & Infrastructure", icon: "🛣️", frontendValue: "roads" },
+  { value: "UTILITIES", label: "Street Lighting", icon: "💡", frontendValue: "lighting" },
+  { value: "UTILITIES", label: "Water & Utilities", icon: "💧", frontendValue: "water" },
+  { value: "PUBLIC_SERVICES", label: "Waste Management", icon: "🗑️", frontendValue: "waste" },
+  { value: "SAFETY", label: "Safety & Security", icon: "🛡️", frontendValue: "safety" },
+  { value: "ENVIRONMENT", label: "Parks & Environment", icon: "🌳", frontendValue: "parks" },
+  { value: "TRANSPORTATION", label: "Public Transport", icon: "🚌", frontendValue: "transport" },
+  { value: "PUBLIC_SERVICES", label: "Public Buildings", icon: "🏢", frontendValue: "buildings" },
+  { value: "OTHER", label: "Other", icon: "📋", frontendValue: "other" },
 ]
 
+// Map frontend priorities to backend priorities
 const priorities = [
-  { value: "low", label: "Low", color: "text-green-400", description: "Minor inconvenience" },
-  { value: "medium", label: "Medium", color: "text-yellow-400", description: "Moderate impact" },
-  { value: "high", label: "High", color: "text-orange-400", description: "Significant problem" },
-  { value: "critical", label: "Critical", color: "text-red-400", description: "Safety hazard" },
+  { value: "LOW", label: "Low", color: "text-green-400", description: "Minor inconvenience", frontendValue: "low" },
+  { value: "MEDIUM", label: "Medium", color: "text-yellow-400", description: "Moderate impact", frontendValue: "medium" },
+  { value: "HIGH", label: "High", color: "text-orange-400", description: "Significant problem", frontendValue: "high" },
+  { value: "URGENT", label: "Critical", color: "text-red-400", description: "Safety hazard", frontendValue: "critical" },
 ]
 
 export function ReportForm() {
@@ -61,7 +65,7 @@ export function ReportForm() {
     location: {
       address: "",
       landmark: "",
-      coordinates: { lat: 0, lng: 0 },
+      coordinates: { lat: 28.6139, lng: 77.2090 }, // Default to Delhi coordinates
       useCurrentLocation: false,
     },
     contactInfo: {
@@ -74,17 +78,64 @@ export function ReportForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
   const [dragActive, setDragActive] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [createdIssueId, setCreatedIssueId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setSubmitError(null)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      // Check if user is authenticated
+      if (!authService.isAuthenticated()) {
+        throw new Error('You must be logged in to submit a report')
+      }
 
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+      // Map frontend form data to backend format
+      const categoryMapping = categories.find(cat => cat.frontendValue === formData.category)
+      const priorityMapping = priorities.find(pri => pri.frontendValue === formData.priority)
+
+      // Validate coordinates
+      const lat = formData.location.coordinates.lat;
+      const lng = formData.location.coordinates.lng;
+      
+      if (!lat || !lng || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        throw new Error('Please provide a valid location or use current location');
+      }
+
+      const issueData = {
+        title: formData.title,
+        description: formData.description,
+        category: categoryMapping?.value || 'OTHER',
+        priority: priorityMapping?.value || 'MEDIUM',
+        latitude: lat,
+        longitude: lng,
+        address: formData.location.address || undefined,
+        city: undefined, // Could be extracted from address if needed
+        state: undefined, // Could be extracted from address if needed
+        zipCode: undefined, // Could be extracted from address if needed
+        images: [], // For now, we'll keep images empty as file upload needs separate handling
+        tags: [], // Could be derived from category/subcategory if needed
+        isAnonymous: formData.anonymous
+      }
+
+      console.log('Sending issue data:', issueData)
+      const response = await apiService.createIssue(issueData)
+      
+      if (response.success) {
+        setCreatedIssueId(response.data.id)
+        setIsSubmitted(true)
+      } else {
+        throw new Error(response.error || 'Failed to create issue')
+      }
+    } catch (error) {
+      console.error('Submit error:', error)
+      setSubmitError(error instanceof Error ? error.message : 'An unexpected error occurred')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleImageUpload = (files: FileList | null) => {
@@ -306,7 +357,7 @@ export function ReportForm() {
                         </SelectTrigger>
                         <SelectContent className="bg-gray-900 border-gray-700">
                           {categories.map((cat) => (
-                            <SelectItem key={cat.value} value={cat.value} className="text-white hover:bg-gray-800">
+                            <SelectItem key={cat.frontendValue} value={cat.frontendValue} className="text-white hover:bg-gray-800">
                               <div className="flex items-center gap-2">
                                 <span>{cat.icon}</span>
                                 <span>{cat.label}</span>
@@ -341,40 +392,42 @@ export function ReportForm() {
                       </div>
                     )}
 
-                    {/* Priority */}
-                    <div className="space-y-2">
-                      <Label className="text-white font-medium">Priority Level *</Label>
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                        {priorities.map((priority) => (
-                          <div
-                            key={priority.value}
-                            className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                              formData.priority === priority.value
-                                ? "border-white bg-white/5"
-                                : "border-gray-700 hover:border-gray-600"
-                            }`}
-                            onClick={() => setFormData((prev) => ({ ...prev, priority: priority.value }))}
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              <Zap className={`w-4 h-4 ${priority.color}`} />
-                              <span className={`font-medium ${priority.color}`}>{priority.label}</span>
+                  {/* Priority */}
+                  <div className="space-y-2">
+                    <Label className="text-white font-medium">Priority Level *</Label>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      {priorities.map((priority) => (
+                        <div
+                          key={priority.frontendValue}
+                          className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                            formData.priority === priority.frontendValue
+                              ? "border-white bg-white/5"
+                              : "border-gray-700 hover:border-gray-600"
+                          }`}
+                          onClick={() => setFormData((prev) => ({ ...prev, priority: priority.frontendValue }))}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-2 h-2 rounded-full ${priority.color.replace('text-', 'bg-')}`} />
+                            <div>
+                              <div className="font-medium">{priority.label}</div>
+                              <div className="text-xs text-gray-400">{priority.description}</div>
                             </div>
-                            <p className="text-xs text-gray-400">{priority.description}</p>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ))}
                     </div>
+                  </div>
 
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        onClick={() => setCurrentStep(2)}
-                        disabled={!formData.title || !formData.category || !formData.priority}
-                        className="bg-white text-black hover:bg-gray-100"
-                      >
-                        Next: Photos & Location
-                      </Button>
-                    </div>
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      onClick={() => setCurrentStep(2)}
+                      disabled={!formData.title || !formData.category || !formData.priority}
+                      className="bg-white text-black hover:bg-gray-100"
+                    >
+                      Next: Photos & Location
+                    </Button>
+                  </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -831,6 +884,17 @@ export function ReportForm() {
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Error Display */}
+                {submitError && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-red-400">
+                      <AlertTriangle className="w-4 h-4" />
+                      <span className="font-medium">Error</span>
+                    </div>
+                    <p className="text-sm text-gray-400 mt-1">{submitError}</p>
+                  </div>
+                )}
 
                 <div className="flex justify-between">
                   <Button
