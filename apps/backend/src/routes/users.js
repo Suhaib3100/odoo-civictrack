@@ -540,8 +540,7 @@ router.patch('/:id/status', authorize('ADMIN'), async (req, res) => {
     const updatedUser = await prisma.user.update({
       where: { id },
       data: { 
-        isActive: status === 'active',
-        status: status === 'banned' ? 'BANNED' : 'ACTIVE'
+        isActive: status === 'active'
       },
       select: {
         id: true,
@@ -550,7 +549,6 @@ router.patch('/:id/status', authorize('ADMIN'), async (req, res) => {
         lastName: true,
         role: true,
         isActive: true,
-        status: true,
         createdAt: true
       }
     });
@@ -601,7 +599,6 @@ router.get('/', authorize('ADMIN'), async (req, res) => {
         lastName: true,
         role: true,
         isActive: true,
-        status: true,
         createdAt: true,
         updatedAt: true,
         _count: {
