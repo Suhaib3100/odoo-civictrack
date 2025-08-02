@@ -1,0 +1,166 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  role      UserRole @default(USER)
+  avatar    String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  zipCode   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  issues    Issue[]
+  comments  Comment[]
+  votes     Vote[]
+
+  @@map("users")
+}
+
+model Issue {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  category    IssueCategory
+  status      IssueStatus @default(OPEN)
+  priority    Priority    @default(MEDIUM)
+  latitude    Float
+  longitude   Float
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  images      String[]    // Array of image URLs
+  tags        String[]    // Array of tags
+  isAnonymous Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  votes     Vote[]
+  updates   IssueUpdate[]
+
+  @@map("issues")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  isPublic  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issueId String
+  issue   Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  type      VoteType
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issueId String
+  issue   Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, issueId])
+  @@map("votes")
+}
+
+model IssueUpdate {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  status      IssueStatus
+  createdAt   DateTime @default(now())
+
+  // Relations
+  issueId String
+  issue   Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@map("issue_updates")
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  role      AdminRole @default(ADMIN)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// Enums
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum IssueCategory {
+  INFRASTRUCTURE
+  SAFETY
+  ENVIRONMENT
+  TRANSPORTATION
+  UTILITIES
+  PUBLIC_SERVICES
+  OTHER
+}
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  REJECTED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum VoteType {
+  UP
+  DOWN
+} 
