@@ -21,8 +21,15 @@ import {
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
-import { useAuth } from "@/contexts/auth-context"
 import { apiService, type Issue } from "@/lib/api"
+import { authService } from "@/lib/auth"
+import { LocationGuard } from "@/components/location-guard"
+import { 
+  filterIssuesInRadius, 
+  getUserLocation, 
+  canAccessIssue,
+  type UserLocation 
+} from "@/lib/location"
 
 const mockIssues = [
   {
@@ -151,22 +158,42 @@ const mockIssues = [
 export function LandingPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("")
+  const [selectedStatus, setSelectedStatus] = useState("")
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [apiIssues, setApiIssues] = useState<Issue[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const { isAuthenticated } = useAuth()
+  const [isLoadingIssues, setIsLoadingIssues] = useState(true)
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
+  const [selectedRadius, setSelectedRadius] = useState(5) // 5 km default
+  const issuesPerPage = 9
+
+  // Initialize user location and authentication
+  useEffect(() => {
+    const initializeApp = async () => {
+      // Check authentication
+      const authenticated = authService.isAuthenticated()
+      setIsAuthenticated(authenticated)
+      
+      // Get user location
+      const location = getUserLocation()
+      setUserLocation(location)
+    }
+    
+    initializeApp()
+  }, [])
 
   // Fetch issues from API
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        setIsLoading(true)
+        setIsLoadingIssues(true)
         const response = await apiService.getIssues({ limit: 50 })
         setApiIssues(response.data.issues)
       } catch (err) {
         console.error('Failed to fetch issues:', err)
         // Continue with just mock data if API fails
       } finally {
-        setIsLoading(false)
+        setIsLoadingIssues(false)
       }
     }
 
@@ -220,12 +247,15 @@ export function LandingPage() {
     }
   }
 
-  // Combine API issues with mock data
-  const allIssues = [
-    ...apiIssues.map(convertApiIssueToMockFormat),
-    ...mockIssues
+  // Combine mock and API issues
+  const allIssuesRaw = [
+    ...mockIssues,
+    ...apiIssues.map(convertApiIssueToMockFormat)
   ]
-  const issuesPerPage = 9
+
+  // For now, show all mock issues (location filtering disabled)
+  const allIssues = allIssuesRaw
+
   const totalPages = Math.ceil(allIssues.length / issuesPerPage)
 
   const currentIssues = allIssues.slice((currentPage - 1) * issuesPerPage, currentPage * issuesPerPage)
@@ -257,7 +287,8 @@ export function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <LocationGuard requiredForAccess={true}>
+      <div className="min-h-screen bg-black">
       {/* Hero Section with Navigation */}
       <HeroSectionComponent isLoggedIn={isAuthenticated} />
 
@@ -348,21 +379,66 @@ export function LandingPage() {
                   <div className="aspect-square bg-black/40 rounded-2xl border border-white/10 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-purple-900/30" />
                     
-                    {/* Map Pins */}
+                    {/* Enhanced Map Pins */}
                     <motion.div 
-                      className="absolute top-1/4 left-1/3 w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg"
-                      animate={{ scale: [1, 1.2, 1] }}
+                      className="absolute top-1/4 left-1/3 w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full border-3 border-white shadow-2xl"
+                      animate={{ 
+                        scale: [1, 1.3, 1],
+                        boxShadow: [
+                          "0 0 20px rgba(239, 68, 68, 0.6)",
+                          "0 0 30px rgba(239, 68, 68, 0.8)",
+                          "0 0 20px rgba(239, 68, 68, 0.6)"
+                        ]
+                      }}
                       transition={{ duration: 2, repeat: Infinity }}
-                    />
+                    >
+                      <div className="absolute inset-0 bg-white rounded-full scale-50 opacity-80"></div>
+                    </motion.div>
                     <motion.div 
-                      className="absolute top-1/2 right-1/4 w-6 h-6 bg-yellow-500 rounded-full border-2 border-white shadow-lg"
-                      animate={{ scale: [1, 1.2, 1] }}
+                      className="absolute top-1/2 right-1/4 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full border-3 border-white shadow-2xl"
+                      animate={{ 
+                        scale: [1, 1.3, 1],
+                        boxShadow: [
+                          "0 0 20px rgba(251, 191, 36, 0.6)",
+                          "0 0 30px rgba(251, 191, 36, 0.8)",
+                          "0 0 20px rgba(251, 191, 36, 0.6)"
+                        ]
+                      }}
                       transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                    >
+                      <div className="absolute inset-0 bg-white rounded-full scale-50 opacity-80"></div>
+                    </motion.div>
+                    <motion.div 
+                      className="absolute bottom-1/3 left-1/2 w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full border-3 border-white shadow-2xl"
+                      animate={{ 
+                        scale: [1, 1.3, 1],
+                        boxShadow: [
+                          "0 0 20px rgba(34, 197, 94, 0.6)",
+                          "0 0 30px rgba(34, 197, 94, 0.8)",
+                          "0 0 20px rgba(34, 197, 94, 0.6)"
+                        ]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                    >
+                      <div className="absolute inset-0 bg-white rounded-full scale-50 opacity-80"></div>
+                    </motion.div>
+                    
+                    {/* Additional smaller pins for more activity */}
+                    <motion.div 
+                      className="absolute top-3/4 left-1/4 w-5 h-5 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full border-2 border-white shadow-xl"
+                      animate={{ 
+                        scale: [1, 1.2, 1],
+                        opacity: [0.7, 1, 0.7]
+                      }}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: 1.5 }}
                     />
                     <motion.div 
-                      className="absolute bottom-1/3 left-1/2 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg"
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                      className="absolute top-1/6 right-1/3 w-5 h-5 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full border-2 border-white shadow-xl"
+                      animate={{ 
+                        scale: [1, 1.2, 1],
+                        opacity: [0.7, 1, 0.7]
+                      }}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: 2 }}
                     />
                     
                     {/* Grid Lines */}
@@ -650,6 +726,7 @@ export function LandingPage() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </LocationGuard>
   )
 }

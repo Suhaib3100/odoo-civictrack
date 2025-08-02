@@ -1,5 +1,10 @@
 import { IssueDetailPage } from "@/components/issue-detail-page"
 
-export default function IssueDetailPageRoute({ params }: { params: { id: string } }) {
-  return <IssueDetailPage issueId={params.id} />
+interface PageProps {
+  params: Promise<{ id: string }>
+}
+
+export default async function IssueDetailPageRoute({ params }: PageProps) {
+  const { id } = await params
+  return <IssueDetailPage issueId={id} />
 }

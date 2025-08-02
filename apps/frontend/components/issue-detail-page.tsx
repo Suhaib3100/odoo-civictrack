@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { apiService, type Issue } from "@/lib/api"
+import { authService } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -203,6 +204,10 @@ export function IssueDetailPage({ issueId }: IssueDetailPageProps) {
   const [newComment, setNewComment] = useState("")
   const [isLiked, setIsLiked] = useState(false)
   const [isFollowing, setIsFollowing] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userVote, setUserVote] = useState<'upvote' | 'downvote' | null>(null)
+  const [localUpvotes, setLocalUpvotes] = useState(0)
+  const [localDownvotes, setLocalDownvotes] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("")
   const [selectedDistance, setSelectedDistance] = useState("")
@@ -215,6 +220,10 @@ export function IssueDetailPage({ issueId }: IssueDetailPageProps) {
       try {
         setIsLoading(true)
         
+        // Check authentication
+        const authenticated = authService.isAuthenticated()
+        setIsAuthenticated(authenticated)
+        
         // Check if issueId is a number (mock issue) or string (real issue)
         const isNumericId = !isNaN(Number(issueId))
         
@@ -224,6 +233,8 @@ export function IssueDetailPage({ issueId }: IssueDetailPageProps) {
           if (mockIssue) {
             setIssue(mockIssue)
             setIsRealIssue(false)
+            setLocalUpvotes(mockIssue.upvotes || 0)
+            setLocalDownvotes(mockIssue.downvotes || 0)
           }
         } else {
           // Real issue - fetch from API
@@ -289,11 +300,15 @@ export function IssueDetailPage({ issueId }: IssueDetailPageProps) {
             
             setIssue(convertedIssue)
             setIsRealIssue(true)
+            setLocalUpvotes(convertedIssue.upvotes || 0)
+            setLocalDownvotes(convertedIssue.downvotes || 0)
           } catch (error) {
             console.error('Failed to fetch real issue:', error)
             // Fallback to first mock issue if API fails
             setIssue(mockIssues[0])
             setIsRealIssue(false)
+            setLocalUpvotes(mockIssues[0].upvotes || 0)
+            setLocalDownvotes(mockIssues[0].downvotes || 0)
           }
         }
       } catch (error) {
@@ -307,6 +322,52 @@ export function IssueDetailPage({ issueId }: IssueDetailPageProps) {
 
     fetchIssueData()
   }, [issueId])
+
+  // Handle upvote/downvote functionality
+  const handleVote = async (voteType: 'upvote' | 'downvote') => {
+    if (!isAuthenticated) {
+      alert('Please log in to vote on issues')
+      return
+    }
+
+    try {
+      // If user already voted the same way, remove the vote
+      if (userVote === voteType) {
+        setUserVote(null)
+        if (voteType === 'upvote') {
+          setLocalUpvotes(prev => prev - 1)
+        } else {
+          setLocalDownvotes(prev => prev - 1)
+        }
+      } else {
+        // If user voted differently before, adjust both counts
+        if (userVote === 'upvote' && voteType === 'downvote') {
+          setLocalUpvotes(prev => prev - 1)
+          setLocalDownvotes(prev => prev + 1)
+        } else if (userVote === 'downvote' && voteType === 'upvote') {
+          setLocalDownvotes(prev => prev - 1)
+          setLocalUpvotes(prev => prev + 1)
+        } else {
+          // First time voting
+          if (voteType === 'upvote') {
+            setLocalUpvotes(prev => prev + 1)
+          } else {
+            setLocalDownvotes(prev => prev + 1)
+          }
+        }
+        setUserVote(voteType)
+      }
+
+      // For real issues, make API call (mock implementation)
+      if (isRealIssue) {
+        // In production, you would call: await apiService.voteOnIssue(issueId, voteType)
+        console.log(`Voted ${voteType} on issue ${issueId}`)
+      }
+    } catch (error) {
+      console.error('Failed to vote:', error)
+      alert('Failed to submit vote. Please try again.')
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -574,8 +635,42 @@ export function IssueDetailPage({ issueId }: IssueDetailPageProps) {
                       </DropdownMenu>
                     </div>
 
-                    {/* Engagement Stats */}
+                    {/* Engagement Stats with Voting */}
                     <div className="absolute bottom-6 right-6 flex items-center gap-4 text-sm text-white/80 backdrop-blur-md bg-black/40 px-4 py-2 rounded-lg">
+                      {/* Upvote/Downvote Section - Only show if authenticated */}
+                      {isAuthenticated && (
+                        <div className="flex items-center gap-2 border-r border-white/20 pr-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleVote('upvote')}
+                            className={`flex items-center gap-1 px-2 py-1 h-auto min-w-0 transition-all duration-200 ${
+                              userVote === 'upvote' 
+                                ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
+                                : 'hover:bg-white/10 text-white/80 hover:text-white'
+                            }`}
+                          >
+                            <ThumbsUp className="w-4 h-4" />
+                            <span className="font-medium text-sm">{localUpvotes}</span>
+                          </Button>
+                          
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleVote('downvote')}
+                            className={`flex items-center gap-1 px-2 py-1 h-auto min-w-0 transition-all duration-200 ${
+                              userVote === 'downvote' 
+                                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
+                                : 'hover:bg-white/10 text-white/80 hover:text-white'
+                            }`}
+                          >
+                            <ThumbsDown className="w-4 h-4" />
+                            <span className="font-medium text-sm">{localDownvotes}</span>
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {/* Other Stats */}
                       <div className="flex items-center gap-1">
                         <Eye className="w-4 h-4" />
                         <span>{issue.views}</span>
