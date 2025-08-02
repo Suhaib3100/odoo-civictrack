@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { IssueMap } from "@/components/map/issue-map"
 import { Issue, Location } from "@/types/map"
-import { Loader2 } from "lucide-react"
+import { Loader2, MapPin, AlertCircle } from "lucide-react"
 
 // Mock data for demonstration
 const mockIssues: Issue[] = [
@@ -105,41 +105,97 @@ const mockIssues: Issue[] = [
   },
 ]
 
+// Default locations for different regions
+const defaultLocations = {
+  newYork: { lat: 40.7128, lng: -74.0060 },
+  london: { lat: 51.5074, lng: -0.1278 },
+  tokyo: { lat: 35.6762, lng: 139.6503 },
+  mumbai: { lat: 19.0760, lng: 72.8777 },
+  bangalore: { lat: 12.9716, lng: 77.5946 },
+}
+
 export default function MapPage() {
   const [userLocation, setUserLocation] = useState<Location | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [locationSource, setLocationSource] = useState<string>("")
 
   useEffect(() => {
-    // Get user's current location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          })
-          setIsLoading(false)
-        },
-        (error) => {
-          console.error("Error getting location:", error)
-          setError("Unable to get your location. Please enable location services.")
-          // Fallback to a default location (New York City)
-          setUserLocation({ lat: 40.7128, lng: -74.0060 })
-          setIsLoading(false)
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000, // 5 minutes
+    const getLocation = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        // Check if geolocation is supported
+        if (!navigator.geolocation) {
+          throw new Error("Geolocation is not supported by this browser.")
         }
-      )
-    } else {
-      setError("Geolocation is not supported by this browser.")
-      // Fallback to a default location
-      setUserLocation({ lat: 40.7128, lng: -74.0060 })
-      setIsLoading(false)
+
+        // Get user's current location with better options
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            {
+              enableHighAccuracy: true,
+              timeout: 15000, // 15 seconds
+              maximumAge: 300000, // 5 minutes
+            }
+          )
+        })
+
+        const location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        }
+
+        setUserLocation(location)
+        setLocationSource("GPS")
+        setIsLoading(false)
+      } catch (error: any) {
+        console.error("Error getting location:", error)
+        
+        // Try to get location from IP address as fallback
+        try {
+          const ipResponse = await fetch("https://ipapi.co/json/")
+          const ipData = await ipResponse.json()
+          
+          if (ipData.latitude && ipData.longitude) {
+            const location = {
+              lat: parseFloat(ipData.latitude),
+              lng: parseFloat(ipData.longitude),
+            }
+            setUserLocation(location)
+            setLocationSource("IP Address")
+            setIsLoading(false)
+            return
+          }
+        } catch (ipError) {
+          console.error("Error getting IP location:", ipError)
+        }
+
+        // Use default location based on timezone or region
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        let defaultLocation: Location
+
+        if (timezone.includes("America")) {
+          defaultLocation = defaultLocations.newYork
+        } else if (timezone.includes("Europe")) {
+          defaultLocation = defaultLocations.london
+        } else if (timezone.includes("Asia")) {
+          defaultLocation = defaultLocations.bangalore
+        } else {
+          defaultLocation = defaultLocations.newYork
+        }
+
+        setUserLocation(defaultLocation)
+        setLocationSource("Default")
+        setError(`Unable to get your exact location. Showing ${timezone.includes("America") ? "New York" : timezone.includes("Europe") ? "London" : "Bangalore"} area.`)
+        setIsLoading(false)
+      }
     }
+
+    getLocation()
   }, [])
 
   if (isLoading) {
@@ -147,8 +203,8 @@ export default function MapPage() {
       <div className="h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-4" />
-          <p className="text-white text-lg">Getting your location...</p>
-          <p className="text-gray-400 text-sm mt-2">Please allow location access</p>
+          <p className="text-white text-lg mb-2">Getting your location...</p>
+          <p className="text-gray-400 text-sm">Please allow location access for better experience</p>
         </div>
       </div>
     )
@@ -159,6 +215,7 @@ export default function MapPage() {
       <div className="h-screen bg-black flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6">
+            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
             <h2 className="text-red-400 text-xl font-semibold mb-2">Location Error</h2>
             <p className="text-gray-300 mb-4">{error}</p>
             <button
@@ -177,11 +234,25 @@ export default function MapPage() {
     return (
       <div className="h-screen bg-black flex items-center justify-center">
         <div className="text-center">
+          <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-white text-lg">Unable to determine your location</p>
         </div>
       </div>
     )
   }
 
-  return <IssueMap issues={mockIssues} userLocation={userLocation} />
+  return (
+    <div className="h-screen bg-black">
+      {error && (
+        <div className="absolute top-4 left-4 right-4 z-[1001] bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-yellow-400" />
+            <span className="text-yellow-300 text-sm">{error}</span>
+            <span className="text-yellow-400 text-xs">(Location: {locationSource})</span>
+          </div>
+        </div>
+      )}
+      <IssueMap issues={mockIssues} userLocation={userLocation} />
+    </div>
+  )
 }

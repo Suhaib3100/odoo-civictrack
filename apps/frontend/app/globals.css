@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -96,6 +99,8 @@
 /* Custom styles for map components */
 .leaflet-container {
   background: #1a1a1a !important;
+  height: 100% !important;
+  width: 100% !important;
 }
 
 .leaflet-popup-content-wrapper {
@@ -166,6 +171,19 @@
 
 .leaflet-popup-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* Fix for map container sizing */
+.leaflet-container {
+  z-index: 1;
+}
+
+.leaflet-control-zoom {
+  z-index: 1000;
+}
+
+.leaflet-control-attribution {
+  z-index: 1000;
 }
 
 /* Sign-in component animations */

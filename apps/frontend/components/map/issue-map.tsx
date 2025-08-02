@@ -5,15 +5,15 @@ import dynamic from "next/dynamic"
 import { getDistance } from "geolib"
 import { FilterBar } from "./filter-bar"
 import { Issue, FilterOptions, Location } from "@/types/map"
-import { MapPin, Navigation } from "lucide-react"
+import { Loader2 } from "lucide-react"
 
-// Dynamically import the entire map component to avoid SSR issues
+// Dynamically import the map component with no SSR
 const MapComponent = dynamic(() => import("./map-component"), {
   ssr: false,
   loading: () => (
-    <div className="h-screen bg-black flex items-center justify-center">
+    <div className="h-full bg-black flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
+        <Loader2 className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-4" />
         <p className="text-white text-lg">Loading map...</p>
       </div>
     </div>
@@ -33,6 +33,11 @@ export function IssueMap({ issues, userLocation }: IssueMapProps) {
   })
 
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Get unique categories from issues
   const categories = useMemo(() => {
@@ -90,13 +95,22 @@ export function IssueMap({ issues, userLocation }: IssueMapProps) {
         categories={categories}
       />
 
-      {/* Map Component */}
-      <MapComponent 
-        issues={filteredIssues}
-        userLocation={userLocation}
-        onMarkerClick={handleMarkerClick}
-        totalIssues={issues.length}
-      />
+      {/* Map Component - Only render on client */}
+      {isClient ? (
+        <MapComponent 
+          issues={filteredIssues}
+          userLocation={userLocation}
+          onMarkerClick={handleMarkerClick}
+          totalIssues={issues.length}
+        />
+      ) : (
+        <div className="h-full bg-black flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-4" />
+            <p className="text-white text-lg">Loading map...</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 
