@@ -8,9 +8,18 @@ interface MapComponentProps {
   userLocation: Location
   onMarkerClick: (issue: Issue) => void
   totalIssues: number
+  locationAccuracy?: number | null
+  locationSource?: string
 }
 
-export default function MapComponent({ issues, userLocation, onMarkerClick, totalIssues }: MapComponentProps) {
+export default function MapComponent({ 
+  issues, 
+  userLocation, 
+  onMarkerClick, 
+  totalIssues,
+  locationAccuracy,
+  locationSource = "GPS"
+}: MapComponentProps) {
   const [isMapLoaded, setIsMapLoaded] = useState(false)
   const [mapError, setMapError] = useState<string | null>(null)
   const mapRef = useRef<HTMLDivElement>(null)
@@ -40,7 +49,7 @@ export default function MapComponent({ issues, userLocation, onMarkerClick, tota
       // Create map instance
       const map = L.map(mapRef.current, {
         center: [userLocation.lat, userLocation.lng],
-        zoom: 13,
+        zoom: 15, // Closer zoom for better detail
         zoomControl: true,
         scrollWheelZoom: true,
         doubleClickZoom: true,
@@ -57,7 +66,7 @@ export default function MapComponent({ issues, userLocation, onMarkerClick, tota
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 18,
-        minZoom: 3,
+        minZoom: 10,
       }).addTo(map)
 
       // Fix for default markers
@@ -68,7 +77,7 @@ export default function MapComponent({ issues, userLocation, onMarkerClick, tota
         shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
       })
 
-      // Create user location marker
+      // Create user location marker with accuracy circle
       const userLocationIcon = L.icon({
         iconUrl: `data:image/svg+xml;base64,${btoa(`
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -86,10 +95,28 @@ export default function MapComponent({ issues, userLocation, onMarkerClick, tota
         title: "Your Location"
       }).addTo(map)
 
+      // Add accuracy circle if accuracy is available
+      if (locationAccuracy && locationAccuracy > 0) {
+        const accuracyCircle = L.circle([userLocation.lat, userLocation.lng], {
+          color: '#3b82f6',
+          fillColor: '#3b82f6',
+          fillOpacity: 0.1,
+          weight: 1,
+          radius: locationAccuracy
+        }).addTo(map)
+      }
+
+      // Create popup content with accuracy info
+      const accuracyText = locationAccuracy 
+        ? `Accuracy: ±${Math.round(locationAccuracy)}m`
+        : "Location accuracy unknown"
+      
       userMarker.bindPopup(`
-        <div style="text-align: center; padding: 8px;">
-          <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">Your Location</div>
-          <div style="font-size: 14px; color: #6b7280;">You are here</div>
+        <div style="text-align: center; padding: 12px; min-width: 200px;">
+          <div style="font-weight: 600; color: #1f2937; margin-bottom: 8px; font-size: 16px;">Your Location</div>
+          <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">You are here</div>
+          <div style="font-size: 12px; color: #9ca3af; margin-bottom: 4px;">${accuracyText}</div>
+          <div style="font-size: 12px; color: #9ca3af;">Source: ${locationSource}</div>
         </div>
       `)
 
@@ -151,7 +178,7 @@ export default function MapComponent({ issues, userLocation, onMarkerClick, tota
       console.error('Error initializing map:', error)
       setMapError('Failed to load map. Please refresh the page.')
     }
-  }, [userLocation, issues, onMarkerClick, cleanupMap])
+  }, [userLocation, issues, onMarkerClick, cleanupMap, locationAccuracy, locationSource])
 
   // Initialize map on mount and when dependencies change
   useEffect(() => {
@@ -203,6 +230,21 @@ export default function MapComponent({ issues, userLocation, onMarkerClick, tota
           <div className="text-xs text-gray-600">
             of {totalIssues} total
           </div>
+        </div>
+        
+        {/* Location Accuracy Info */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+          <div className="text-sm font-medium text-gray-900 mb-1">
+            Location
+          </div>
+          <div className="text-xs text-gray-600 mb-1">
+            {locationSource}
+          </div>
+          {locationAccuracy && (
+            <div className="text-xs text-gray-600">
+              ±{Math.round(locationAccuracy)}m
+            </div>
+          )}
         </div>
       </div>
 

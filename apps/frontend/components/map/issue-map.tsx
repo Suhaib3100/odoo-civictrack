@@ -23,9 +23,11 @@ const MapComponent = dynamic(() => import("./map-component"), {
 interface IssueMapProps {
   issues: Issue[]
   userLocation: Location
+  locationAccuracy?: number | null
+  locationSource?: string
 }
 
-export function IssueMap({ issues, userLocation }: IssueMapProps) {
+export function IssueMap({ issues, userLocation, locationAccuracy, locationSource }: IssueMapProps) {
   const [filters, setFilters] = useState<FilterOptions>({
     status: 'all',
     category: 'all',
@@ -102,6 +104,8 @@ export function IssueMap({ issues, userLocation }: IssueMapProps) {
           userLocation={userLocation}
           onMarkerClick={handleMarkerClick}
           totalIssues={issues.length}
+          locationAccuracy={locationAccuracy}
+          locationSource={locationSource}
         />
       ) : (
         <div className="h-full bg-black flex items-center justify-center">
