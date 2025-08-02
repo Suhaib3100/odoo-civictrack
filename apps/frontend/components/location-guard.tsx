@@ -1,31 +1,22 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
+import { MapPin, Navigation, Shield, AlertCircle, CheckCircle, Loader2, Map, Users, Heart, Star, Zap, Lock, Globe, Smartphone, Settings } from 'lucide-react'
 import { 
-  MapPin, 
-  Navigation, 
-  Shield, 
-  AlertCircle, 
-  CheckCircle,
-  Settings,
-  Lock
-} from "lucide-react"
-import { motion } from "framer-motion"
-import {
-  getCurrentLocation,
-  checkLocationPermission,
-  getUserLocation,
-  saveUserLocation,
-  clearUserLocation,
-  RADIUS_OPTIONS,
-  type UserLocation,
-  type RadiusOption
-} from "@/lib/location"
+  getUserLocation, 
+  saveUserLocation, 
+  clearUserLocation, 
+  RADIUS_OPTIONS, 
+  type UserLocation, 
+  type RadiusOption 
+} from '@/lib/location'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface LocationGuardProps {
   children: React.ReactNode
@@ -57,9 +48,33 @@ export function LocationGuard({ children, requiredForAccess = true }: LocationGu
 
     // Try to get GPS location
     try {
-      const permission = await checkLocationPermission()
-      if (permission.granted) {
-        const location = await getCurrentLocation()
+      // Check if geolocation is supported
+      if (!navigator.geolocation) {
+        setError('Geolocation is not supported by this browser')
+        setIsLoading(false)
+        return
+      }
+      
+      // Get current position
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const location = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            address: 'Current Location',
+            radius: selectedRadius
+          }
+          if (location) {
+            setUserLocation(location)
+            saveUserLocation(location)
+          } else {
+            setShowSetup(true)
+          }
+        },
+        (error) => {
+          setError("Unable to get GPS location. Please enable location services or enter manually.")
+              radius: selectedRadius
+            }
         if (location) {
           setUserLocation(location)
           saveUserLocation(location)

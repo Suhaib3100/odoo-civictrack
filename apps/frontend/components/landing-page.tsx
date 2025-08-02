@@ -1,35 +1,47 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { HeroSectionComponent } from "@/components/ui/hero-section-5"
-import {
-  AlertTriangle,
-  ArrowRight,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { 
+  MapPin, 
+  Calendar, 
+  User, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock, 
+  Search, 
+  Filter, 
+  TrendingUp, 
+  Users, 
+  BarChart3, 
+  Map, 
+  Navigation, 
+  Zap, 
+  Shield, 
+  Heart, 
+  Star,
   Eye,
-  MapPin,
-  Search,
-  TrendingUp,
-  Users,
-} from "lucide-react"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { useState, useEffect } from "react"
-import { apiService, type Issue } from "@/lib/api"
-import { authService } from "@/lib/auth"
-import { LocationGuard } from "@/components/location-guard"
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { apiService, type Issue } from '@/lib/api'
+import { authService } from '@/lib/auth'
+import { LocationGuard } from '@/components/location-guard-new'
 import { 
   filterIssuesInRadius, 
   getUserLocation, 
   canAccessIssue,
   type UserLocation 
-} from "@/lib/location"
+} from '@/lib/location'
+import { useTheme } from '@/contexts/theme-context'
+import { HeroSectionComponent } from '@/components/ui/hero-section-5'
 
 const mockIssues = [
   {
