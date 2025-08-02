@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react"
 import { IssueMap } from "@/components/map/issue-map"
 import { Issue, Location } from "@/types/map"
-import { Loader2, MapPin, AlertCircle, Navigation, Filter, Info } from "lucide-react"
+import { Loader2, MapPin, AlertCircle, Navigation, Filter, Info, Search, X, Settings } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Function to generate demo issues around a specific location
 const generateDemoIssues = (centerLocation: Location): Issue[] => {
@@ -84,7 +88,10 @@ export default function MapPage() {
   const [error, setError] = useState<string | null>(null)
   const [locationSource, setLocationSource] = useState<string>("")
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null)
-  const [showInfo, setShowInfo] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedStatus, setSelectedStatus] = useState("all")
+  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [selectedDistance, setSelectedDistance] = useState("all")
 
   useEffect(() => {
     const getLocation = async () => {
@@ -191,14 +198,14 @@ export default function MapPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center">
+      <div className="h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
             <Navigation className="w-8 h-8 text-blue-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
           </div>
           <h2 className="text-white text-xl font-semibold mb-2">Getting Your Location</h2>
-          <p className="text-gray-300 text-sm">Please allow location access for accurate results</p>
+          <p className="text-gray-400 text-sm">Please allow location access for accurate results</p>
         </div>
       </div>
     )
@@ -206,18 +213,18 @@ export default function MapPage() {
 
   if (error && !userLocation) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center">
+      <div className="h-screen bg-black flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-8 backdrop-blur-sm">
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-8">
             <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-6" />
             <h2 className="text-red-400 text-2xl font-semibold mb-4">Location Error</h2>
             <p className="text-gray-300 mb-6 text-lg">{error}</p>
-            <button
+            <Button
               onClick={() => window.location.reload()}
               className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors font-medium"
             >
               Try Again
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -226,7 +233,7 @@ export default function MapPage() {
 
   if (!userLocation) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center">
+      <div className="h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-6" />
           <h2 className="text-white text-xl font-semibold">Unable to determine your location</h2>
@@ -236,78 +243,176 @@ export default function MapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
-      {/* Header */}
-      <div className="relative z-10 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <div className="h-screen bg-black flex">
+      {/* Left Panel - Search & Filters */}
+      <div className="w-1/2 bg-gray-900 border-r border-gray-800 flex flex-col">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-800">
+          <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
               <Navigation className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-white text-xl font-bold">Community Issues Map</h1>
-              <p className="text-gray-300 text-sm">Find and report local issues</p>
+              <h1 className="text-white text-xl font-bold">Community Issues</h1>
+              <p className="text-gray-400 text-sm">Find and report local issues</p>
             </div>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowInfo(!showInfo)}
-              className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search issues..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* Filters Section */}
+        <div className="p-6 space-y-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="w-5 h-5 text-gray-400" />
+            <h2 className="text-white font-semibold">Filters</h2>
+          </div>
+
+          {/* Status Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">Status</label>
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Reported">Reported</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Resolved">Resolved</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Category Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">Category</label>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="Roads & Infrastructure">Roads & Infrastructure</SelectItem>
+                <SelectItem value="Water & Utilities">Water & Utilities</SelectItem>
+                <SelectItem value="Lighting">Lighting</SelectItem>
+                <SelectItem value="Waste Management">Waste Management</SelectItem>
+                <SelectItem value="Parks & Environment">Parks & Environment</SelectItem>
+                <SelectItem value="Safety & Security">Safety & Security</SelectItem>
+                <SelectItem value="Public Buildings">Public Buildings</SelectItem>
+                <SelectItem value="Transportation">Transportation</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Distance Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">Distance</label>
+            <Select value={selectedDistance} onValueChange={setSelectedDistance}>
+              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                <SelectItem value="all">All Distances</SelectItem>
+                <SelectItem value="1km">Within 1km</SelectItem>
+                <SelectItem value="3km">Within 3km</SelectItem>
+                <SelectItem value="5km">Within 5km</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Clear Filters */}
+          {(selectedStatus !== "all" || selectedCategory !== "all" || selectedDistance !== "all" || searchQuery) && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSelectedStatus("all")
+                setSelectedCategory("all")
+                setSelectedDistance("all")
+                setSearchQuery("")
+              }}
+              className="w-full bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700"
             >
-              <Info className="w-5 h-5 text-white" />
-            </button>
-            <button className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium">
-              <Filter className="w-4 h-4 inline mr-2" />
-              Filters
-            </button>
+              <X className="w-4 h-4 mr-2" />
+              Clear All Filters
+            </Button>
+          )}
+        </div>
+
+        {/* Active Filters */}
+        <div className="px-6 pb-6">
+          <div className="flex flex-wrap gap-2">
+            {selectedStatus !== "all" && (
+              <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                {selectedStatus}
+              </Badge>
+            )}
+            {selectedCategory !== "all" && (
+              <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
+                {selectedCategory}
+              </Badge>
+            )}
+            {selectedDistance !== "all" && (
+              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                {selectedDistance}
+              </Badge>
+            )}
+            {searchQuery && (
+              <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
+                Search: {searchQuery}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Location Info */}
+        <div className="mt-auto p-6 border-t border-gray-800">
+          <div className="flex items-center gap-2 mb-3">
+            <Settings className="w-4 h-4 text-gray-400" />
+            <span className="text-sm font-medium text-gray-300">Location Info</span>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Source:</span>
+              <span className="text-white font-medium">{locationSource}</span>
+            </div>
+            {locationAccuracy && (
+              <div className="flex justify-between">
+                <span className="text-gray-400">Accuracy:</span>
+                <span className="text-white font-medium">±{Math.round(locationAccuracy)}m</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-gray-400">Issues Found:</span>
+              <span className="text-white font-medium">{demoIssues.length}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Info Panel */}
-      {showInfo && (
-        <div className="absolute top-20 right-6 z-20 bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-2xl max-w-sm">
-          <h3 className="font-semibold text-gray-900 mb-3">Map Information</h3>
-          <div className="space-y-2 text-sm text-gray-600">
-            <div className="flex justify-between">
-              <span>Location Source:</span>
-              <span className="font-medium">{locationSource}</span>
-            </div>
-            {locationAccuracy && (
-              <div className="flex justify-between">
-                <span>Accuracy:</span>
-                <span className="font-medium">±{Math.round(locationAccuracy)}m</span>
+      {/* Right Panel - Map */}
+      <div className="w-1/2 relative">
+        {error && (
+          <div className="absolute top-4 left-4 right-4 z-20 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-yellow-300 text-sm font-medium">{error}</p>
+                <p className="text-yellow-400 text-xs">Location: {locationSource}</p>
               </div>
-            )}
-            <div className="flex justify-between">
-              <span>Issues Found:</span>
-              <span className="font-medium">{demoIssues.length}</span>
-            </div>
-            <div className="pt-2 border-t">
-              <p className="text-xs text-gray-500">
-                Blue marker shows your location. Colored markers show reported issues in your area.
-              </p>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Error Banner */}
-      {error && (
-        <div className="absolute top-24 left-6 right-6 z-20 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-yellow-300 text-sm font-medium">{error}</p>
-              <p className="text-yellow-400 text-xs">Location: {locationSource}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Map Container - Half Screen */}
-      <div className="relative h-[calc(100vh-120px)]">
+        )}
+        
         <IssueMap 
           issues={demoIssues} 
           userLocation={userLocation}

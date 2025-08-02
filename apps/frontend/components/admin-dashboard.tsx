@@ -223,21 +223,21 @@ export function AdminDashboard() {
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center">
                       <stat.icon className="w-5 h-5 text-white/80" />
-                    </div>
-                    <div>
+              </div>
+              <div>
                       <p className="text-2xl font-bold text-white">{stat.value}</p>
                       <p className="text-sm text-gray-400">{stat.label}</p>
-                    </div>
-                  </div>
+              </div>
+            </div>
                   <div className={`text-sm font-medium ${stat.color}`}>
                     {stat.trend}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
           </motion.div>
         ))}
-      </div>
+              </div>
 
       {/* Quick Actions */}
       <Card className="bg-white/[0.02] border border-white/10">
@@ -258,10 +258,10 @@ export function AdminDashboard() {
               <Download className="w-4 h-4 mr-2" />
               Export Analytics
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
   )
 
   const renderIssuesTab = () => (
@@ -271,14 +271,14 @@ export function AdminDashboard() {
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Search issues..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search issues..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-gray-900/50 border-gray-800 text-white"
-              />
-            </div>
+                />
+              </div>
             <div className="flex gap-2">
               <Button
                 variant={selectedFilter === "all" ? "default" : "outline"}
@@ -558,14 +558,14 @@ export function AdminDashboard() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-300">{item.category}</span>
                     <span className="text-white font-medium">{item.percentage}%</span>
-                  </div>
+              </div>
                   <div className="w-full bg-gray-700 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full ${item.color}`}
                       style={{ width: `${item.percentage}%` }}
                     />
-                  </div>
-                </div>
+              </div>
+              </div>
               ))}
             </div>
           </CardContent>
@@ -616,8 +616,8 @@ export function AdminDashboard() {
                     <span className={`text-xs ${item.trend.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
                       {item.trend}
                     </span>
-                  </div>
-                </div>
+              </div>
+              </div>
               ))}
             </div>
           </CardContent>
@@ -679,8 +679,8 @@ export function AdminDashboard() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <BackNavigation />
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold text-white">CivicTrack Admin</span>
@@ -742,7 +742,7 @@ export function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          {renderContent()}
+        {renderContent()}
         </motion.div>
       </div>
     </div>

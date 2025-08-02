@@ -184,6 +184,17 @@ export function LandingPage() {
       {/* Hero Section with Navigation */}
       <HeroSectionComponent isLoggedIn={isLoggedIn} />
 
+      {/* Ticker */}
+      <div className="bg-black border-b border-white/10 py-2 overflow-hidden">
+        <div className="flex items-center justify-center text-sm text-gray-300">
+          <MapPin className="w-4 h-4 mr-2 text-green-400" />
+          <span>Check out our interactive map to see real-time community issues</span>
+          <Link href="/map" className="ml-2 text-green-400 hover:text-green-300 underline">
+            View Map →
+          </Link>
+        </div>
+      </div>
+
       {/* Stats Section */}
       <section className="py-20 bg-black">
         <div className="container mx-auto px-4">
