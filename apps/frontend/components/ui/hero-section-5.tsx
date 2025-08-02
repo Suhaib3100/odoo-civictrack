@@ -7,13 +7,25 @@ import { AwardBadge } from "@/components/ui/award-badge"
 import { InfiniteSlider } from "@/components/ui/infinite-slider"
 import { ProgressiveBlur } from "@/components/ui/progressive-blur"
 import { cn } from "@/lib/utils"
-import { Menu, X, ChevronRight } from "lucide-react"
+import { Menu, X, ChevronRight, User, FileText, LogOut } from "lucide-react"
 import { useScroll, motion } from "framer-motion"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
-export function HeroSectionComponent() {
+interface HeroSectionComponentProps {
+  isLoggedIn?: boolean
+}
+
+export function HeroSectionComponent({ isLoggedIn = false }: HeroSectionComponentProps = {}) {
   return (
     <>
-      <HeroHeader />
+      <HeroHeader isLoggedIn={isLoggedIn} />
       <main className="overflow-x-hidden">
         <section className="bg-black">
           <div className="py-24 md:pb-32 lg:pb-36 lg:pt-72">
@@ -169,7 +181,11 @@ const menuItems = [
   { name: "About", href: "/about" },
 ]
 
-const HeroHeader = () => {
+interface HeroHeaderProps {
+  isLoggedIn?: boolean
+}
+
+const HeroHeader = ({ isLoggedIn }: HeroHeaderProps) => {
   const [menuState, setMenuState] = React.useState(false)
   const [scrolled, setScrolled] = React.useState(false)
   const { scrollYProgress } = useScroll()
@@ -233,23 +249,54 @@ const HeroHeader = () => {
                   ))}
                 </ul>
               </div>
-              <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                <Button
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white bg-transparent"
-                >
-                  <Link href="/login">
-                    <span>Login</span>
-                  </Link>
-                </Button>
-                <Button asChild size="sm" className="bg-white text-black hover:bg-gray-100">
-                  <Link href="/signup">
-                    <span>Sign Up</span>
-                  </Link>
-                </Button>
-              </div>
+              {isLoggedIn ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src="/placeholder.svg" alt="User" />
+                        <AvatarFallback>JD</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <div className="flex items-center justify-start gap-2 p-2">
+                      <div className="flex flex-col space-y-1 leading-none">
+                        <p className="font-medium">John Doe</p>
+                        <p className="w-[200px] truncate text-sm text-muted-foreground">john@example.com</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <FileText className="mr-2 h-4 w-4" />
+                      <Link href="/my-issues">My Reports</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        localStorage.removeItem("civictrack_user")
+                        window.location.reload()
+                      }}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="flex gap-2">
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href="/login">Sign In</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link href="/signup">Sign Up</Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

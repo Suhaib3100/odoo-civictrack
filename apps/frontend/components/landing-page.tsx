@@ -182,7 +182,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-black">
       {/* Hero Section with Navigation */}
-      <HeroSectionComponent />
+      <HeroSectionComponent isLoggedIn={isLoggedIn} />
 
       {/* Stats Section */}
       <section className="py-20 bg-black">
@@ -246,84 +246,87 @@ export function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <Card className="h-full bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/20 transition-all duration-500 group cursor-pointer overflow-hidden backdrop-blur-sm">
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={issue.image || "/placeholder.svg"}
-                      alt={issue.title}
-                      className="w-full h-52 object-cover group-hover:scale-[1.02] transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                    {/* Status Badge */}
-                    <div className="absolute top-5 left-5">
-                      <Badge
-                        className={`${getStatusColor(issue.status)} flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border backdrop-blur-md`}
-                      >
-                        {getStatusIcon(issue.status)}
-                        {issue.status}
-                      </Badge>
-                    </div>
-
-                    {/* Category Badge */}
-                    <div className="absolute top-5 right-5">
-                      <Badge className="bg-black/40 text-white/90 border-0 backdrop-blur-md px-3 py-1.5 text-xs font-medium">
-                        {issue.category}
-                      </Badge>
-                    </div>
-
-                    {/* Priority Indicator */}
-                    <div className="absolute bottom-4 right-4">
-                      <div
-                        className={`w-3 h-3 rounded-full ${
-                          issue.priority === "High"
-                            ? "bg-red-400"
-                            : issue.priority === "Medium"
-                              ? "bg-yellow-400"
-                              : "bg-green-400"
-                        } shadow-lg`}
+                <Link href={`/issue/${issue.id}`} className="block h-full">
+                  <Card className="h-full bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/20 transition-all duration-500 group cursor-pointer overflow-hidden backdrop-blur-sm hover:scale-[1.02]">
+                    {/* Rest of the card content remains the same */}
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={issue.image || "/placeholder.svg"}
+                        alt={issue.title}
+                        className="w-full h-52 object-cover group-hover:scale-[1.02] transition-transform duration-700 ease-out"
                       />
-                    </div>
-                  </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                  <CardContent className="p-6 space-y-4">
-                    {/* Title */}
-                    <h3 className="text-lg font-semibold text-white group-hover:text-white/90 transition-colors line-clamp-2 leading-tight">
-                      {issue.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-sm text-gray-400 line-clamp-2 leading-relaxed">{issue.description}</p>
-
-                    {/* Location & Time */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-white/5">
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span className="truncate font-medium">{issue.location}</span>
+                      {/* Status Badge */}
+                      <div className="absolute top-5 left-5">
+                        <Badge
+                          className={`${getStatusColor(issue.status)} flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border backdrop-blur-md`}
+                        >
+                          {getStatusIcon(issue.status)}
+                          {issue.status}
+                        </Badge>
                       </div>
-                      <span className="flex-shrink-0 text-gray-400">{issue.reportedAt}</span>
+
+                      {/* Category Badge */}
+                      <div className="absolute top-5 right-5">
+                        <Badge className="bg-black/40 text-white/90 border-0 backdrop-blur-md px-3 py-1.5 text-xs font-medium">
+                          {issue.category}
+                        </Badge>
+                      </div>
+
+                      {/* Priority Indicator */}
+                      <div className="absolute bottom-4 right-4">
+                        <div
+                          className={`w-3 h-3 rounded-full ${
+                            issue.priority === "High"
+                              ? "bg-red-400"
+                              : issue.priority === "Medium"
+                                ? "bg-yellow-400"
+                                : "bg-green-400"
+                          } shadow-lg`}
+                        />
+                      </div>
                     </div>
 
-                    {/* Footer */}
-                    <div className="flex items-center justify-between pt-3">
-                      <div className="flex items-center gap-4 text-xs">
-                        <div className="flex items-center gap-1.5 text-gray-400">
-                          <Users className="w-3.5 h-3.5" />
-                          <span className="font-semibold text-white">{issue.votes}</span>
-                          <span>votes</span>
+                    <CardContent className="p-6 space-y-4">
+                      {/* Title */}
+                      <h3 className="text-lg font-semibold text-white group-hover:text-white/90 transition-colors line-clamp-2 leading-tight">
+                        {issue.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-sm text-gray-400 line-clamp-2 leading-relaxed">{issue.description}</p>
+
+                      {/* Location & Time */}
+                      <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-white/5">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span className="truncate font-medium">{issue.location}</span>
                         </div>
-                        <span className="text-gray-500">by {issue.reportedBy}</span>
+                        <span className="flex-shrink-0 text-gray-400">{issue.reportedAt}</span>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-400 hover:text-white hover:bg-white/5 p-2 rounded-lg transition-all duration-300"
-                      >
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-3">
+                        <div className="flex items-center gap-4 text-xs">
+                          <div className="flex items-center gap-1.5 text-gray-400">
+                            <Users className="w-3.5 h-3.5" />
+                            <span className="font-semibold text-white">{issue.votes}</span>
+                            <span>votes</span>
+                          </div>
+                          <span className="text-gray-500">by {issue.reportedBy}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-400 hover:text-white hover:bg-white/5 p-2 rounded-lg transition-all duration-300"
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -379,17 +382,43 @@ export function LandingPage() {
               we can create positive change.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="text-lg px-8 py-4 bg-white text-black hover:bg-gray-100 shadow-lg" asChild>
-                <Link href="/report">Report Your First Issue</Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-lg px-8 py-4 border-2 border-gray-700 text-gray-300 hover:bg-gray-900 hover:text-white bg-transparent transition-all duration-200"
-                onClick={() => setIsLoggedIn(!isLoggedIn)}
-              >
-                {isLoggedIn ? "Sign Out" : "Sign In to Get Started"}
-              </Button>
+              {isLoggedIn ? (
+                <>
+                  <Button
+                    size="lg"
+                    className="text-lg px-8 py-4 bg-white text-black hover:bg-gray-100 shadow-lg"
+                    asChild
+                  >
+                    <Link href="/report">Report New Issue</Link>
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="text-lg px-8 py-4 border-2 border-gray-700 text-gray-300 hover:bg-gray-900 hover:text-white bg-transparent transition-all duration-200"
+                    asChild
+                  >
+                    <Link href="/my-issues">My Issues</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    size="lg"
+                    className="text-lg px-8 py-4 bg-white text-black hover:bg-gray-100 shadow-lg"
+                    asChild
+                  >
+                    <Link href="/report">Report Your First Issue</Link>
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="text-lg px-8 py-4 border-2 border-gray-700 text-gray-300 hover:bg-gray-900 hover:text-white bg-transparent transition-all duration-200"
+                    onClick={() => setIsLoggedIn(!isLoggedIn)}
+                  >
+                    {isLoggedIn ? "Sign Out" : "Sign In to Get Started"}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
-import { IssueDetail } from "@/components/issue-detail"
+import { IssueDetailPage } from "@/components/issue-detail-page"
 
-export default function IssueDetailPage({ params }: { params: { id: string } }) {
-  return <IssueDetail issueId={params.id} />
+export default function IssueDetailPageRoute({ params }: { params: { id: string } }) {
+  return <IssueDetailPage issueId={params.id} />
 }
