@@ -177,6 +177,11 @@ class ApiClient {
       return await this.handleResponse<T>(response);
     } catch (error) {
       console.error('API request failed:', error);
+      // If it's already an Error object with a message, preserve it
+      if (error instanceof Error) {
+        throw error;
+      }
+      // Otherwise, throw a generic network error
       throw new Error('Network error occurred');
     }
   }
@@ -625,17 +630,4 @@ class ApiClient {
 export const api = new ApiClient(API_BASE_URL);
 
 // Export token manager for direct access
-export { TokenManager };
-
-// Export types
-export type {
-  User,
-  AuthResponse,
-  Issue,
-  Comment,
-  Vote,
-  IssueUpdate,
-  PaginatedResponse,
-  ApiResponse,
-  ErrorResponse,
-}; 
+export { TokenManager }; 

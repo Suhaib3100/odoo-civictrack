@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await api.login({ email, password });
       setUser(response.data.user);
       toast.success('Login successful!');
-      router.push('/map');
+      router.push('/');
     } catch (error) {
       console.error('Login failed:', error);
       throw error;

@@ -63,7 +63,24 @@ export function SignupPage() {
       })
     } catch (error: any) {
       console.error('Registration failed:', error)
-      toast.error(error.message || 'Registration failed. Please try again.')
+      
+      // Check if the error is about user already existing
+      if (error.message && error.message.includes('already exists')) {
+        toast.error(
+          <div>
+            <p>{error.message}</p>
+            <button 
+              onClick={() => router.push('/login')}
+              className="text-blue-500 underline mt-1"
+            >
+              Click here to login instead
+            </button>
+          </div>,
+          { duration: 5000 }
+        )
+      } else {
+        toast.error(error.message || 'Registration failed. Please try again.')
+      }
     } finally {
       setIsSubmitting(false)
     }
