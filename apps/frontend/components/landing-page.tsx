@@ -6,16 +6,17 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { HeroSectionComponent } from "@/components/ui/hero-section-5"
 import {
-  MapPin,
-  Search,
-  Clock,
   AlertTriangle,
-  CheckCircle,
   ArrowRight,
-  Users,
+  CheckCircle,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Eye,
+  MapPin,
+  Search,
   TrendingUp,
+  Users,
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
@@ -259,6 +260,156 @@ export function LandingPage() {
     <div className="min-h-screen bg-black">
       {/* Hero Section with Navigation */}
       <HeroSectionComponent isLoggedIn={isAuthenticated} />
+
+      {/* Map Feature Highlight Section */}
+      <section className="py-16 lg:py-24 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-black border-y border-white/10">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Left Content */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                className="space-y-8"
+              >
+                <div className="space-y-6">
+                  <motion.div
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-300 text-sm font-medium"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <MapPin className="w-4 h-4" />
+                    New Feature
+                  </motion.div>
+                  
+                  <motion.h2 
+                    className="text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight"
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    Explore Issues on 
+                    <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                      Interactive Map
+                    </span>
+                  </motion.h2>
+                  
+                  <p className="text-xl lg:text-2xl text-gray-300 leading-relaxed">
+                    Discover civic issues in your neighborhood with our powerful map visualization. 
+                    See real-time locations, track progress, and find issues near you.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button
+                        size="lg"
+                        className="text-lg px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300"
+                        asChild
+                      >
+                        <Link href="/map" className="flex items-center gap-2">
+                          <MapPin className="w-5 h-5" />
+                          Try Interactive Map
+                        </Link>
+                      </Button>
+                    </motion.div>
+                    
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="text-lg px-8 py-4 border-2 border-white/20 text-white hover:bg-white/10 hover:border-white/40 transition-all duration-300"
+                        asChild
+                      >
+                        <Link href="#features" className="flex items-center gap-2">
+                          <Eye className="w-5 h-5" />
+                          Learn More
+                        </Link>
+                      </Button>
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
+              
+              {/* Right Visual */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="relative"
+              >
+                <div className="relative bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-3xl p-8 lg:p-12 border border-white/10 backdrop-blur-sm">
+                  {/* Mock Map Preview */}
+                  <div className="aspect-square bg-black/40 rounded-2xl border border-white/10 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 to-purple-900/30" />
+                    
+                    {/* Map Pins */}
+                    <motion.div 
+                      className="absolute top-1/4 left-1/3 w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    <motion.div 
+                      className="absolute top-1/2 right-1/4 w-6 h-6 bg-yellow-500 rounded-full border-2 border-white shadow-lg"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                    />
+                    <motion.div 
+                      className="absolute bottom-1/3 left-1/2 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+                    />
+                    
+                    {/* Grid Lines */}
+                    <div className="absolute inset-0 opacity-20">
+                      <div className="grid grid-cols-6 grid-rows-6 h-full w-full">
+                        {Array.from({ length: 36 }).map((_, i) => (
+                          <div key={i} className="border border-white/10" />
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Center Icon */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <motion.div
+                        className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/20"
+                        whileHover={{ scale: 1.1, rotate: 360 }}
+                        transition={{ duration: 0.6 }}
+                      >
+                        <MapPin className="w-8 h-8 text-white" />
+                      </motion.div>
+                    </div>
+                  </div>
+                  
+                  {/* Feature Badges */}
+                  <div className="flex flex-wrap gap-3 mt-6">
+                    {[
+                      { icon: MapPin, text: "Real-time Locations" },
+                      { icon: Users, text: "Community Reports" },
+                      { icon: TrendingUp, text: "Progress Tracking" }
+                    ].map((feature, index) => (
+                      <motion.div
+                        key={index}
+                        className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-white/80"
+                        whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <feature.icon className="w-4 h-4" />
+                        {feature.text}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Stats Section */}
       <section className="py-20 bg-black">

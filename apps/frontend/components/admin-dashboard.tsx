@@ -136,7 +136,8 @@ export function AdminDashboard() {
         const response = await apiService.getUsers({ limit: 100 })
         console.log('Users API response:', response)
         
-        const users = response.data || []
+        // Extract users from the nested response structure
+        const users = (response.data && 'users' in response.data) ? response.data.users : response.data || []
         console.log('Extracted users:', users)
         setApiUsers(Array.isArray(users) ? users : [])
       } catch (err) {
@@ -158,7 +159,7 @@ export function AdminDashboard() {
       await apiService.updateUserStatus(userId, status)
       
       setApiUsers(prev => prev.map(user => 
-        user.id === userId ? { ...user, status: status === 'active' ? 'Active' : 'Banned' } : user
+        user.id === userId ? { ...user, isActive: status === 'active' } : user
       ))
       
       alert(`User ${status === 'active' ? 'activated' : 'banned'} successfully!`)
@@ -282,10 +283,10 @@ export function AdminDashboard() {
 
   // Render Overview Section
   const renderOverview = () => {
-    const totalIssues = allIssues.length
-    const resolvedIssues = allIssues.filter(issue => issue.status === "Resolved").length
-    const inProgressIssues = allIssues.filter(issue => issue.status === "In Progress").length
-    const reportedIssues = allIssues.filter(issue => issue.status === "Reported").length
+    const totalIssues = apiIssues.length
+    const resolvedIssues = apiIssues.filter(issue => issue.status === "RESOLVED").length
+    const inProgressIssues = apiIssues.filter(issue => issue.status === "IN_PROGRESS").length
+    const openIssues = apiIssues.filter(issue => issue.status === "OPEN").length
 
     return (
       <div className="space-y-8">
@@ -293,9 +294,9 @@ export function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: "Issues", value: totalIssues.toString(), icon: AlertTriangle, color: "text-blue-400" },
-            { label: "Users", value: allUsers.length.toString(), icon: Users, color: "text-emerald-400" },
+            { label: "Users", value: apiUsers.length.toString(), icon: Users, color: "text-emerald-400" },
             { label: "Resolved", value: `${totalIssues > 0 ? Math.round((resolvedIssues / totalIssues) * 100) : 0}%`, icon: CheckCircle, color: "text-green-400" },
-            { label: "Pending", value: reportedIssues.toString(), icon: Clock, color: "text-amber-400" },
+            { label: "Open", value: openIssues.toString(), icon: Clock, color: "text-amber-400" },
           ].map((stat, index) => (
             <motion.div
               key={index}
@@ -324,19 +325,19 @@ export function AdminDashboard() {
             <CardTitle className="text-white/90 text-lg font-medium">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {allIssues.slice(0, 5).map((issue, index) => (
-                <div key={index} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                  <div className="flex-1">
-                    <p className="text-white/90 text-sm font-medium">{issue.title}</p>
-                    <p className="text-white/40 text-xs">by {issue.reportedBy}</p>
-                  </div>
-                  <Badge className={`${getStatusColor(issue.status)} text-xs`}>
-                    {issue.status}
-                  </Badge>
+          <div className="space-y-3">
+            {apiIssues.slice(0, 5).map((issue, index) => (
+              <div key={issue.id} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                <div className="flex-1">
+                  <p className="text-white/90 text-sm font-medium">{issue.title}</p>
+                  <p className="text-white/40 text-xs">by {issue.user?.firstName || 'Anonymous'} {issue.user?.lastName || ''}</p>
                 </div>
-              ))}
+                <Badge className={`${getStatusColor(issue.status)} text-xs`}>
+                  {issue.status}
+                </Badge>
+              </div>
+            ))}
             </div>
           </CardContent>
         </Card>
@@ -399,12 +400,12 @@ export function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allIssues.map((issue) => (
+              {apiIssues.map((issue) => (
                 <TableRow key={issue.id} className="border-gray-800 hover:bg-gray-800/30">
                   <TableCell>
                     <div>
                       <p className="font-medium text-white">{issue.title}</p>
-                      <p className="text-sm text-gray-400">{issue.location}</p>
+                      <p className="text-sm text-gray-400">{issue.address || `${issue.city || ''}, ${issue.state || ''}`}</p>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -417,10 +418,10 @@ export function AdminDashboard() {
                     <Badge className={getPriorityColor(issue.priority)}>{issue.priority}</Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="text-gray-300">{issue.reportedBy}</span>
+                    <span className="text-gray-300">{issue.user?.firstName || 'Anonymous'} {issue.user?.lastName || ''}</span>
                   </TableCell>
                   <TableCell>
-                    <span className="text-gray-400">{formatDate(issue.reportedAt)}</span>
+                    <span className="text-gray-400">{formatDate(issue.createdAt)}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">

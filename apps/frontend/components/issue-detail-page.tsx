@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { apiService, type Issue } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -197,6 +198,8 @@ interface IssueDetailPageProps {
 
 export function IssueDetailPage({ issueId }: IssueDetailPageProps) {
   const [issue, setIssue] = useState(mockIssues[0])
+  const [isRealIssue, setIsRealIssue] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [newComment, setNewComment] = useState("")
   const [isLiked, setIsLiked] = useState(false)
   const [isFollowing, setIsFollowing] = useState(false)
@@ -205,6 +208,105 @@ export function IssueDetailPage({ issueId }: IssueDetailPageProps) {
   const [selectedDistance, setSelectedDistance] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("overview")
+
+  // Fetch issue data on component mount
+  useEffect(() => {
+    const fetchIssueData = async () => {
+      try {
+        setIsLoading(true)
+        
+        // Check if issueId is a number (mock issue) or string (real issue)
+        const isNumericId = !isNaN(Number(issueId))
+        
+        if (isNumericId) {
+          // Mock issue - use mock data
+          const mockIssue = mockIssues.find(issue => issue.id === parseInt(issueId))
+          if (mockIssue) {
+            setIssue(mockIssue)
+            setIsRealIssue(false)
+          }
+        } else {
+          // Real issue - fetch from API
+          try {
+            const response = await apiService.getIssue(issueId)
+            const apiIssue = response.data
+            
+            // Convert API issue to mock format for display
+            const convertedIssue = {
+              id: parseInt(apiIssue.id) || Math.random(),
+              title: apiIssue.title,
+              description: apiIssue.description,
+              category: apiIssue.category,
+              status: apiIssue.status === 'RESOLVED' ? 'Resolved' : 
+                      apiIssue.status === 'IN_PROGRESS' ? 'In Progress' : 'Reported',
+              priority: apiIssue.priority === 'HIGH' ? 'High' : 
+                       apiIssue.priority === 'MEDIUM' ? 'Medium' : 'Low',
+              severity: apiIssue.priority === 'HIGH' ? 'Critical' : 'Moderate',
+              reportedAt: apiIssue.createdAt,
+              reportedBy: apiIssue.isAnonymous ? 'Anonymous' : 
+                         (apiIssue.user?.firstName ? `${apiIssue.user.firstName} ${apiIssue.user.lastName || ''}` : 'User'),
+              location: apiIssue.address || `${apiIssue.city || ''}, ${apiIssue.state || ''}`,
+              coordinates: { lat: apiIssue.latitude, lng: apiIssue.longitude },
+              images: apiIssue.images || [],
+              votes: apiIssue._count?.votes || 0,
+              upvotes: Math.floor((apiIssue._count?.votes || 0) * 0.8),
+              downvotes: Math.floor((apiIssue._count?.votes || 0) * 0.2),
+              views: Math.floor(Math.random() * 100) + 50,
+              shares: Math.floor(Math.random() * 10) + 1,
+              followers: Math.floor(Math.random() * 20) + 5,
+              tags: apiIssue.tags || [],
+              // Use default values for fields not available in API
+              subcategory: 'General',
+              reporterId: apiIssue.userId,
+              ward: 'N/A',
+              pincode: apiIssue.zipCode || 'N/A',
+              landmark: 'N/A',
+              estimatedCost: 'Under Review',
+              estimatedDuration: 'TBD',
+              assignedTo: 'Municipal Authority',
+              contactNumber: '+91-79-2658-4321',
+              timeline: [
+                {
+                  id: 1,
+                  status: 'Reported',
+                  date: apiIssue.createdAt,
+                  description: 'Issue reported by citizen',
+                  user: apiIssue.isAnonymous ? 'Anonymous' : 
+                        (apiIssue.user?.firstName ? `${apiIssue.user.firstName} ${apiIssue.user.lastName || ''}` : 'User'),
+                  userType: 'citizen',
+                  details: 'Initial report submitted with details'
+                }
+              ],
+              comments: [],
+              relatedIssues: [],
+              statistics: {
+                avgResolutionTime: '12 days',
+                similarIssuesInArea: Math.floor(Math.random() * 10) + 1,
+                successRate: '89%',
+                citizenSatisfaction: '4.2/5'
+              }
+            }
+            
+            setIssue(convertedIssue)
+            setIsRealIssue(true)
+          } catch (error) {
+            console.error('Failed to fetch real issue:', error)
+            // Fallback to first mock issue if API fails
+            setIssue(mockIssues[0])
+            setIsRealIssue(false)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching issue data:', error)
+        setIssue(mockIssues[0])
+        setIsRealIssue(false)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchIssueData()
+  }, [issueId])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -276,6 +378,18 @@ export function IssueDetailPage({ issueId }: IssueDetailPageProps) {
       hour: "2-digit",
       minute: "2-digit",
     })
+  }
+
+  // Show loading state while fetching data
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/60 text-sm">Loading issue details...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -276,7 +276,7 @@ export const AwardBadge = ({ type, place, link }: AwardBadgeProps) => {
             x={isByteCrewTeam ? "53" : "53"}
             y="20"
           >
-            {isByteCrewTeam ? "ODOO HACKATHON 2024" : "PRODUCT HUNT"}
+            {isByteCrewTeam ? "ODOO HACKATHON 2025" : "PRODUCT HUNT"}
           </text>
 
           <text
