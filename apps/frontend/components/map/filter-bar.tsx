@@ -4,23 +4,36 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FilterOptions } from "@/types/map"
-import { Filter, X } from "lucide-react"
+import { Filter, MapPin, X } from "lucide-react"
+import { FilterOptions, FilterBarProps } from "@/types/map"
 
-interface FilterBarProps {
-  filters: FilterOptions
-  onFilterChange: (filters: FilterOptions) => void
-  categories: string[]
-}
+const statusOptions = [
+  { value: 'all', label: 'All Status' },
+  { value: 'Reported', label: 'Reported' },
+  { value: 'In Progress', label: 'In Progress' },
+  { value: 'Resolved', label: 'Resolved' },
+]
+
+const distanceOptions = [
+  { value: 'all', label: 'All Distances' },
+  { value: '1km', label: 'Within 1km' },
+  { value: '3km', label: 'Within 3km' },
+  { value: '5km', label: 'Within 5km' },
+]
 
 export function FilterBar({ filters, onFilterChange, categories }: FilterBarProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
-  const handleFilterChange = (key: keyof FilterOptions, value: string) => {
-    onFilterChange({
-      ...filters,
-      [key]: value
-    })
+  const handleStatusChange = (status: string) => {
+    onFilterChange({ ...filters, status: status as FilterOptions['status'] })
+  }
+
+  const handleCategoryChange = (category: string) => {
+    onFilterChange({ ...filters, category })
+  }
+
+  const handleDistanceChange = (distance: string) => {
+    onFilterChange({ ...filters, distance: distance as FilterOptions['distance'] })
   }
 
   const clearFilters = () => {
@@ -34,38 +47,90 @@ export function FilterBar({ filters, onFilterChange, categories }: FilterBarProp
   const hasActiveFilters = filters.status !== 'all' || filters.category !== 'all' || filters.distance !== 'all'
 
   return (
-    <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Filter Controls */}
-          <div className="flex items-center gap-4">
-            {/* Status Filter */}
+    <div className="sticky top-0 z-50 bg-black/95 backdrop-blur-sm border-b border-white/10">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between gap-4">
+          {/* Title and Filter Toggle */}
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Status:</span>
-              <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
-                <SelectTrigger className="w-32 h-8 text-sm">
+              <MapPin className="w-5 h-5 text-blue-400" />
+              <h2 className="text-lg font-semibold text-white">Community Issues Map</h2>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Filters
+            </Button>
+          </div>
+
+          {/* Active Filters Display */}
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-400">Active filters:</span>
+              {filters.status !== 'all' && (
+                <Badge className="bg-blue-500/15 text-blue-300 border-blue-500/30">
+                  {filters.status}
+                </Badge>
+              )}
+              {filters.category !== 'all' && (
+                <Badge className="bg-green-500/15 text-green-300 border-green-500/30">
+                  {filters.category}
+                </Badge>
+              )}
+              {filters.distance !== 'all' && (
+                <Badge className="bg-purple-500/15 text-purple-300 border-purple-500/30">
+                  {filters.distance}
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="text-gray-400 hover:text-white p-1"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Expanded Filter Controls */}
+        {isExpanded && (
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Status Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Status</label>
+              <Select value={filters.status} onValueChange={handleStatusChange}>
+                <SelectTrigger className="bg-gray-900/50 border-gray-800 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="Reported">Reported</SelectItem>
-                  <SelectItem value="In Progress">In Progress</SelectItem>
-                  <SelectItem value="Resolved">Resolved</SelectItem>
+                <SelectContent className="bg-gray-900 border-gray-800">
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} className="text-gray-300 hover:text-white">
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             {/* Category Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Category:</span>
-              <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
-                <SelectTrigger className="w-40 h-8 text-sm">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Category</label>
+              <Select value={filters.category} onValueChange={handleCategoryChange}>
+                <SelectTrigger className="bg-gray-900/50 border-gray-800 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                <SelectContent className="bg-gray-900 border-gray-800">
+                  <SelectItem value="all" className="text-gray-300 hover:text-white">
+                    All Categories
+                  </SelectItem>
                   {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
+                    <SelectItem key={category} value={category} className="text-gray-300 hover:text-white">
                       {category}
                     </SelectItem>
                   ))}
@@ -74,59 +139,23 @@ export function FilterBar({ filters, onFilterChange, categories }: FilterBarProp
             </div>
 
             {/* Distance Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Distance:</span>
-              <Select value={filters.distance} onValueChange={(value) => handleFilterChange('distance', value)}>
-                <SelectTrigger className="w-24 h-8 text-sm">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Distance</label>
+              <Select value={filters.distance} onValueChange={handleDistanceChange}>
+                <SelectTrigger className="bg-gray-900/50 border-gray-800 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="1km">1 km</SelectItem>
-                  <SelectItem value="3km">3 km</SelectItem>
-                  <SelectItem value="5km">5 km</SelectItem>
+                <SelectContent className="bg-gray-900 border-gray-800">
+                  {distanceOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} className="text-gray-300 hover:text-white">
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Clear Filters Button */}
-            {hasActiveFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearFilters}
-                className="h-8 px-3 text-xs"
-              >
-                <X className="w-3 h-3 mr-1" />
-                Clear
-              </Button>
-            )}
           </div>
-
-          {/* Active Filters Display */}
-          <div className="flex items-center gap-2">
-            {hasActiveFilters && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">Active:</span>
-                {filters.status !== 'all' && (
-                  <Badge variant="secondary" className="text-xs">
-                    {filters.status}
-                  </Badge>
-                )}
-                {filters.category !== 'all' && (
-                  <Badge variant="outline" className="text-xs">
-                    {filters.category}
-                  </Badge>
-                )}
-                {filters.distance !== 'all' && (
-                  <Badge variant="outline" className="text-xs">
-                    {filters.distance}
-                  </Badge>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

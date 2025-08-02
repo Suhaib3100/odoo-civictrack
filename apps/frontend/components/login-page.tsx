@@ -2,10 +2,11 @@
 
 import type React from "react"
 import { useState } from "react"
+
 import { SignInPage, type Testimonial } from "@/components/ui/sign-in"
 import { BackNavigation } from "@/components/ui/back-navigation"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
 
 const civicTestimonials: Testimonial[] = [
@@ -13,7 +14,7 @@ const civicTestimonials: Testimonial[] = [
     avatarSrc: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
     name: "Priya Sharma",
     handle: "@priya_civic",
-    text: "CivicTract helped me report a pothole that was fixed within a week. Amazing platform for community engagement!",
+    text: "CivicTrack helped me report a pothole that was fixed within a week. Amazing platform for community engagement!",
   },
   {
     avatarSrc: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
@@ -31,38 +32,34 @@ const civicTestimonials: Testimonial[] = [
 
 export function LoginPage() {
   const router = useRouter()
-  const { login, loading } = useAuth()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { login, isLoading } = useAuth()
+  const [error, setError] = useState<string | null>(null)
 
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setIsSubmitting(true)
+    setError(null)
+    
+    const formData = new FormData(event.currentTarget)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
 
     try {
-      const formData = new FormData(event.currentTarget)
-      const email = formData.get('email') as string
-      const password = formData.get('password') as string
-
-      if (!email || !password) {
-        toast.error('Please fill in all fields')
-        return
-      }
-
       await login(email, password)
-    } catch (error: any) {
-      console.error('Login failed:', error)
-      toast.error(error.message || 'Login failed. Please try again.')
-    } finally {
-      setIsSubmitting(false)
+      toast.success("Login successful!")
+      router.push("/")
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Login failed'
+      setError(errorMessage)
+      toast.error(errorMessage)
     }
   }
 
   const handleGoogleSignIn = () => {
-    toast.info('Google sign-in will be available soon!')
+    toast.info("Google authentication coming soon!")
   }
 
   const handleResetPassword = () => {
-    router.push('/forgot-password')
+    toast.info("Password reset functionality coming soon!")
   }
 
   const handleCreateAccount = () => {
@@ -86,6 +83,8 @@ export function LoginPage() {
         onGoogleSignIn={handleGoogleSignIn}
         onResetPassword={handleResetPassword}
         onCreateAccount={handleCreateAccount}
+        isLoading={isLoading}
+        error={error}
       />
     </div>
   )

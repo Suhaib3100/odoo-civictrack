@@ -57,6 +57,7 @@ interface NavbarProps {
     email: string
     avatar?: string
   }
+  onLogout?: () => void
 }
 
 const Navbar = ({
@@ -125,6 +126,7 @@ const Navbar = ({
     email: "john@example.com",
     avatar: "/placeholder.svg?height=32&width=32&text=JD",
   },
+  onLogout,
 }: NavbarProps) => {
   return (
     <section className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -177,7 +179,7 @@ const Navbar = ({
                     <span>My Reports</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={onLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
@@ -264,7 +266,7 @@ const Navbar = ({
                           <FileText className="mr-2 h-4 w-4" />
                           My Reports
                         </Button>
-                        <Button variant="outline" className="justify-start bg-transparent">
+                        <Button variant="outline" className="justify-start bg-transparent" onClick={onLogout}>
                           <LogOut className="mr-2 h-4 w-4" />
                           Log out
                         </Button>

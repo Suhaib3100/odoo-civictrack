@@ -1,69 +1,38 @@
-'use client';
+"use client"
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
-import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requireAuth?: boolean;
-  requireAdmin?: boolean;
-  requireModerator?: boolean;
-  redirectTo?: string;
+  children: React.ReactNode
+  fallback?: React.ReactNode
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  children,
-  requireAuth = true,
-  requireAdmin = false,
-  requireModerator = false,
-  redirectTo = '/login',
-}) => {
-  const { user, loading, isAuthenticated, isAdmin, isModerator } = useAuth();
-  const router = useRouter();
+export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
-    if (!loading) {
-      if (requireAuth && !isAuthenticated) {
-        router.push(redirectTo);
-        return;
-      }
-
-      if (requireAdmin && !isAdmin) {
-        router.push('/map');
-        return;
-      }
-
-      if (requireModerator && !isModerator) {
-        router.push('/map');
-        return;
-      }
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login')
     }
-  }, [loading, isAuthenticated, isAdmin, isModerator, requireAuth, requireAdmin, requireModerator, redirectTo, router]);
+  }, [isAuthenticated, isLoading, router])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin" />
-          <p className="text-muted-foreground">Loading...</p>
+  if (isLoading) {
+    return fallback || (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-white">Loading...</span>
         </div>
       </div>
-    );
+    )
   }
 
-  if (requireAuth && !isAuthenticated) {
-    return null;
+  if (!isAuthenticated) {
+    return null
   }
 
-  if (requireAdmin && !isAdmin) {
-    return null;
-  }
-
-  if (requireModerator && !isModerator) {
-    return null;
-  }
-
-  return <>{children}</>;
-}; 
+  return <>{children}</>
+} 

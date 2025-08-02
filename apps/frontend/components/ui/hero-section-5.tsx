@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { useAuth } from "@/contexts/auth-context"
+import { toast } from "sonner"
 
 interface HeroSectionComponentProps {
   isLoggedIn?: boolean
@@ -189,6 +191,7 @@ const HeroHeader = ({ isLoggedIn }: HeroHeaderProps) => {
   const [menuState, setMenuState] = React.useState(false)
   const [scrolled, setScrolled] = React.useState(false)
   const { scrollYProgress } = useScroll()
+  const { user, logout } = useAuth()
 
   React.useEffect(() => {
     const unsubscribe = scrollYProgress.on("change", (latest) => {
@@ -254,16 +257,28 @@ const HeroHeader = ({ isLoggedIn }: HeroHeaderProps) => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src="/placeholder.svg" alt="User" />
-                        <AvatarFallback>JD</AvatarFallback>
+                        <AvatarImage src={user?.avatar} alt="User" />
+                        <AvatarFallback>
+                          {user?.firstName && user?.lastName 
+                            ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+                            : user?.firstName 
+                              ? user.firstName[0].toUpperCase()
+                              : user?.email?.[0].toUpperCase() || 'U'
+                          }
+                        </AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <div className="flex items-center justify-start gap-2 p-2">
                       <div className="flex flex-col space-y-1 leading-none">
-                        <p className="font-medium">John Doe</p>
-                        <p className="w-[200px] truncate text-sm text-muted-foreground">john@example.com</p>
+                        <p className="font-medium">
+                          {user?.firstName && user?.lastName 
+                            ? `${user.firstName} ${user.lastName}` 
+                            : user?.firstName || user?.email || 'User'
+                          }
+                        </p>
+                        <p className="w-[200px] truncate text-sm text-muted-foreground">{user?.email || ''}</p>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
@@ -277,9 +292,13 @@ const HeroHeader = ({ isLoggedIn }: HeroHeaderProps) => {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => {
-                        localStorage.removeItem("civictrack_user")
-                        window.location.reload()
+                      onClick={async () => {
+                        try {
+                          await logout()
+                          toast.success('Logged out successfully')
+                        } catch (error) {
+                          toast.error('Failed to logout')
+                        }
                       }}
                     >
                       <LogOut className="mr-2 h-4 w-4" />

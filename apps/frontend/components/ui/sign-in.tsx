@@ -44,6 +44,8 @@ interface SignInPageProps {
   onResetPassword?: () => void
   onCreateAccount?: () => void
   mode?: "signin" | "signup"
+  isLoading?: boolean
+  error?: string | null
 }
 
 // --- SUB-COMPONENTS ---
@@ -81,6 +83,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   onResetPassword,
   onCreateAccount,
   mode = "signin",
+  isLoading = false,
+  error = null,
 }) => {
   const [showPassword, setShowPassword] = useState(false)
 
@@ -106,6 +110,13 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               {title || defaultTitle}
             </h1>
             <p className="animate-element animate-delay-200 text-gray-400">{description || defaultDescription}</p>
+            
+            {error && (
+              <div className="animate-element animate-delay-250 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+            
             <form className="space-y-5" onSubmit={onSignIn}>
               {isSignUp && (
                 <div className="animate-element animate-delay-300">
@@ -223,9 +234,17 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
               <button
                 type="submit"
-                className={`animate-element ${isSignUp ? "animate-delay-800" : "animate-delay-600"} w-full rounded-2xl bg-white text-black py-4 font-medium hover:bg-gray-100 transition-colors`}
+                disabled={isLoading}
+                className={`animate-element ${isSignUp ? "animate-delay-800" : "animate-delay-600"} w-full rounded-2xl bg-white text-black py-4 font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {isSignUp ? "Create Account" : "Sign In"}
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                    {isSignUp ? "Creating Account..." : "Signing In..."}
+                  </div>
+                ) : (
+                  isSignUp ? "Create Account" : "Sign In"
+                )}
               </button>
             </form>
 
