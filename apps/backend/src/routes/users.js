@@ -520,4 +520,124 @@ router.delete('/account', async (req, res) => {
   }
 });
 
-module.exports = router; 
+// @desc    Update user status (Admin only)
+// @route   PATCH /api/users/:id/status
+// @access  Private (Admin only)
+router.patch('/:id/status', authorize('ADMIN'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    if (!['active', 'banned'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid status. Must be "active" or "banned"'
+      });
+    }
+
+    // Update user status
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { 
+        isActive: status === 'active',
+        status: status === 'banned' ? 'BANNED' : 'ACTIVE'
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        status: true,
+        createdAt: true
+      }
+    });
+
+    res.json({
+      success: true,
+      message: `User ${status === 'active' ? 'activated' : 'banned'} successfully`,
+      data: updatedUser
+    });
+  } catch (error) {
+    console.error('Update user status error:', error);
+    if (error.code === 'P2025') {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+    res.status(500).json({
+      success: false,
+      error: 'Server error while updating user status'
+    });
+  }
+});
+
+// @desc    Get all users (Admin only) - Alternative endpoint
+// @route   GET /api/users
+// @access  Private (Admin only)
+router.get('/', authorize('ADMIN'), async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, role } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Build where clause
+    const where = {};
+    if (status) {
+      where.isActive = status === 'active';
+    }
+    if (role) {
+      where.role = role;
+    }
+
+    const users = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            issues: true,
+            comments: true,
+            votes: true
+          }
+        }
+      },
+      skip,
+      take: parseInt(limit),
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const total = await prisma.user.count({ where });
+
+    res.json({
+      success: true,
+      data: {
+        users,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error while fetching users'
+    });
+  }
+});
+
+module.exports = router;

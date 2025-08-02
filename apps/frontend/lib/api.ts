@@ -179,6 +179,45 @@ class ApiService {
       body: JSON.stringify({ content, isPublic }),
     });
   }
+
+  // Update issue status (for admin)
+  async updateIssueStatus(issueId: string, status: string): Promise<ApiResponse<Issue>> {
+    return this.makeRequest<ApiResponse<Issue>>(`/issues/${issueId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  // Get all users (admin only)
+  async getUsers(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    q?: string;
+  }): Promise<PaginatedResponse<any>> {
+    const searchParams = new URLSearchParams();
+    
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, value.toString());
+        }
+      });
+    }
+
+    const queryString = searchParams.toString();
+    const endpoint = queryString ? `/users?${queryString}` : '/users';
+    
+    return this.makeRequest<PaginatedResponse<any>>(endpoint);
+  }
+
+  // Update user status (ban/activate)
+  async updateUserStatus(userId: string, status: 'active' | 'banned'): Promise<ApiResponse<any>> {
+    return this.makeRequest<ApiResponse<any>>(`/users/${userId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
 }
 
 export const apiService = new ApiService();

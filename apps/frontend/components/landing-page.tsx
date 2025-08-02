@@ -19,8 +19,9 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
+import { apiService, type Issue } from "@/lib/api"
 
 const mockIssues = [
   {
@@ -147,12 +148,86 @@ const mockIssues = [
 ]
 
 export function LandingPage() {
-  const { isAuthenticated } = useAuth()
   const [currentPage, setCurrentPage] = useState(1)
-  const issuesPerPage = 9
-  const totalPages = Math.ceil(mockIssues.length / issuesPerPage)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [apiIssues, setApiIssues] = useState<Issue[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const { isAuthenticated } = useAuth()
 
-  const currentIssues = mockIssues.slice((currentPage - 1) * issuesPerPage, currentPage * issuesPerPage)
+  // Fetch issues from API
+  useEffect(() => {
+    const fetchIssues = async () => {
+      try {
+        setIsLoading(true)
+        const response = await apiService.getIssues({ limit: 50 })
+        setApiIssues(response.data.issues)
+      } catch (err) {
+        console.error('Failed to fetch issues:', err)
+        // Continue with just mock data if API fails
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchIssues()
+  }, [])
+
+  // Convert API issues to match mock data format
+  const convertApiIssueToMockFormat = (issue: Issue) => {
+    const categoryMap: Record<string, string> = {
+      'INFRASTRUCTURE': 'Infrastructure',
+      'UTILITIES': 'Water & Utilities',
+      'PUBLIC_SERVICES': 'Waste Management',
+      'SAFETY': 'Safety & Security',
+      'ENVIRONMENT': 'Parks & Environment',
+      'TRANSPORTATION': 'Public Transport',
+      'OTHER': 'Other'
+    }
+
+    const statusMap: Record<string, string> = {
+      'REPORTED': 'Reported',
+      'IN_PROGRESS': 'In Progress',
+      'RESOLVED': 'Resolved',
+      'CLOSED': 'Resolved'
+    }
+
+    const priorityMap: Record<string, string> = {
+      'LOW': 'Low',
+      'MEDIUM': 'Medium',
+      'HIGH': 'High',
+      'URGENT': 'High'
+    }
+
+    return {
+      id: parseInt(issue.id) || Math.random(),
+      title: issue.title,
+      description: issue.description,
+      category: categoryMap[issue.category] || issue.category,
+      status: statusMap[issue.status] || 'Reported',
+      location: issue.address || 'Location not specified',
+      reportedAt: new Date(issue.createdAt).toLocaleString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        day: 'numeric',
+        month: 'short'
+      }),
+      image: issue.images?.[0] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
+      priority: priorityMap[issue.priority] || 'Medium',
+      votes: issue._count?.votes || Math.floor(Math.random() * 20) + 1,
+      reportedBy: issue.isAnonymous ? 'Anonymous' : (issue.user?.firstName ? `${issue.user.firstName} ${issue.user.lastName?.[0] || ''}.` : 'User'),
+    }
+  }
+
+  // Combine API issues with mock data
+  const allIssues = [
+    ...apiIssues.map(convertApiIssueToMockFormat),
+    ...mockIssues
+  ]
+  const issuesPerPage = 9
+  const totalPages = Math.ceil(allIssues.length / issuesPerPage)
+
+  const currentIssues = allIssues.slice((currentPage - 1) * issuesPerPage, currentPage * issuesPerPage)
 
   const getStatusColor = (status: string) => {
     switch (status) {

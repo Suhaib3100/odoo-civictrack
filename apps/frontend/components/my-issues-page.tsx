@@ -226,19 +226,34 @@ export function MyIssuesPage() {
     })
   }
 
-  const filteredIssues = mockUserIssues.filter((issue) => {
-    const matchesSearch =
-      issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      issue.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || issue.status.toLowerCase().replace(" ", "-") === statusFilter
-    const matchesCategory = categoryFilter === "all" || issue.category === categoryFilter
-    return matchesSearch && matchesStatus && matchesCategory
-  })
-
   const getStatusCount = (status: string) => {
-    if (status === "all") return mockUserIssues.length
-    return mockUserIssues.filter((issue) => issue.status.toLowerCase().replace(" ", "-") === status).length
+    return allIssues.filter((issue) => issue.status === status).length
   }
+
+  // Filter and sort issues
+  const filteredIssues = allIssues
+    .filter((issue) => {
+      const matchesSearch = issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        issue.description.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesStatus = statusFilter === "all" || issue.status === statusFilter
+      const matchesCategory = categoryFilter === "all" || issue.category === categoryFilter
+      return matchesSearch && matchesStatus && matchesCategory
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime()
+        case "oldest":
+          return new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime()
+        case "priority":
+          const priorityOrder = { High: 3, Medium: 2, Low: 1 }
+          return (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) - (priorityOrder[a.priority as keyof typeof priorityOrder] || 0)
+        case "votes":
+          return b.votes - a.votes
+        default:
+          return 0
+      }
+    })
 
   return (
     <div className="min-h-screen bg-black">
