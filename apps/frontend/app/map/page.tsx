@@ -3,11 +3,16 @@
 import { useState, useEffect } from "react"
 import { IssueMap } from "@/components/map/issue-map"
 import { Issue, Location } from "@/types/map"
-import { Loader2, MapPin, AlertCircle, Navigation, Filter, Info, Search, X, Settings } from "lucide-react"
+import { Loader2, MapPin, AlertCircle, Navigation, Filter, Info, Search, X, Settings, Plus, LogOut, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ProtectedRoute } from "@/components/protected-route"
+import { useAuth } from "@/lib/auth-context"
+import { api } from "@/lib/api"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 // Function to generate demo issues around a specific location
 const generateDemoIssues = (centerLocation: Location): Issue[] => {
@@ -81,7 +86,9 @@ const defaultLocations = {
   bangalore: { lat: 12.9716, lng: 77.5946 },
 }
 
-export default function MapPage() {
+function MapPageContent() {
+  const { user, logout, isAdmin } = useAuth()
+  const router = useRouter()
   const [userLocation, setUserLocation] = useState<Location | null>(null)
   const [demoIssues, setDemoIssues] = useState<Issue[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -92,6 +99,26 @@ export default function MapPage() {
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedDistance, setSelectedDistance] = useState("all")
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
+
+  const handleReportIssue = () => {
+    router.push('/report')
+  }
+
+  const handleAdminPanel = () => {
+    router.push('/admin')
+  }
+
+  const handleMyIssues = () => {
+    router.push('/my-issues')
+  }
 
   useEffect(() => {
     const getLocation = async () => {
@@ -248,13 +275,73 @@ export default function MapPage() {
       <div className="w-1/2 bg-gray-900 border-r border-gray-800 flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-gray-800">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-              <Navigation className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Navigation className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-white text-xl font-bold">Community Issues</h1>
+                <p className="text-gray-400 text-sm">Find and report local issues</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-white text-xl font-bold">Community Issues</h1>
-              <p className="text-gray-400 text-sm">Find and report local issues</p>
+            
+            {/* User Menu */}
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleReportIssue}
+                size="sm"
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Report Issue
+              </Button>
+              
+              <div className="relative group">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-300 hover:text-white"
+                >
+                  <User className="w-4 h-4" />
+                </Button>
+                
+                {/* Dropdown Menu */}
+                <div className="absolute right-0 top-full mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="p-2">
+                    <div className="px-3 py-2 text-sm text-gray-300 border-b border-gray-700">
+                      {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleMyIssues}
+                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700"
+                    >
+                      My Issues
+                    </Button>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleAdminPanel}
+                        className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-700"
+                      >
+                        Admin Panel
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleLogout}
+                      className="w-full justify-start text-red-300 hover:text-red-200 hover:bg-red-500/10"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -421,5 +508,13 @@ export default function MapPage() {
         />
       </div>
     </div>
+  )
+}
+
+export default function MapPage() {
+  return (
+    <ProtectedRoute>
+      <MapPageContent />
+    </ProtectedRoute>
   )
 }

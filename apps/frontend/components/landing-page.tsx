@@ -19,7 +19,9 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
 
 const mockIssues = [
   {
@@ -99,338 +101,247 @@ const mockIssues = [
     status: "Reported",
     location: "Maple Street & Oak Avenue",
     reportedAt: "4 hours ago",
-    image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1545459720-aac8509aa6c3?w=400&h=300&fit=crop",
     priority: "High",
     votes: 22,
-    reportedBy: "Tom W.",
-  },
-  {
-    id: 7,
-    title: "Graffiti on public building wall",
-    description: "Large graffiti tags appeared on the side of the community center building over the weekend.",
-    category: "Public Buildings",
-    status: "Reported",
-    location: "Community Center - West Wall",
-    reportedAt: "8 hours ago",
-    image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=400&h=300&fit=crop",
-    priority: "Low",
-    votes: 5,
-    reportedBy: "Emma S.",
-  },
-  {
-    id: 8,
-    title: "Blocked storm drain causing flooding",
-    description: "Storm drain is completely blocked with debris, causing water to pool during rain.",
-    category: "Water & Utilities",
-    status: "In Progress",
-    location: "Pine Street & 2nd Avenue",
-    reportedAt: "12 hours ago",
-    image: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=400&h=300&fit=crop",
-    priority: "High",
-    votes: 19,
-    reportedBy: "Chris P.",
-  },
-  {
-    id: 9,
-    title: "Damaged park bench needs replacement",
-    description: "Wooden park bench has several broken slats and is unsafe for public use.",
-    category: "Parks & Environment",
-    status: "Resolved",
-    location: "Central Park - North Path",
-    reportedAt: "2 days ago",
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-    priority: "Low",
-    votes: 7,
-    reportedBy: "Rachel M.",
+    reportedBy: "Tom B.",
   },
 ]
 
 export function LandingPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const issuesPerPage = 9
-  const totalPages = Math.ceil(mockIssues.length / issuesPerPage)
+  const { isAuthenticated, loading } = useAuth()
+  const router = useRouter()
+  const [currentIssueIndex, setCurrentIssueIndex] = useState(0)
 
-  const currentIssues = mockIssues.slice((currentPage - 1) * issuesPerPage, currentPage * issuesPerPage)
+  // Redirect authenticated users to map
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      router.push('/map')
+    }
+  }, [isAuthenticated, loading, router])
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Reported":
-        return "bg-red-500/15 text-red-300 border-red-500/30"
-      case "In Progress":
-        return "bg-amber-500/15 text-amber-300 border-amber-500/30"
       case "Resolved":
-        return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+        return "bg-green-500/20 text-green-300 border-green-500/30"
+      case "In Progress":
+        return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+      case "Reported":
+        return "bg-blue-500/20 text-blue-300 border-blue-500/30"
       default:
-        return "bg-gray-500/15 text-gray-300 border-gray-500/30"
+        return "bg-gray-500/20 text-gray-300 border-gray-500/30"
     }
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "Reported":
-        return <AlertTriangle className="w-3 h-3" />
-      case "In Progress":
-        return <Clock className="w-3 h-3" />
       case "Resolved":
-        return <CheckCircle className="w-3 h-3" />
+        return <CheckCircle className="w-4 h-4" />
+      case "In Progress":
+        return <Clock className="w-4 h-4" />
+      case "Reported":
+        return <AlertTriangle className="w-4 h-4" />
       default:
-        return <AlertTriangle className="w-3 h-3" />
+        return <AlertTriangle className="w-4 h-4" />
     }
+  }
+
+  const nextIssue = () => {
+    setCurrentIssueIndex((prev) => (prev + 1) % mockIssues.length)
+  }
+
+  const prevIssue = () => {
+    setCurrentIssueIndex((prev) => (prev - 1 + mockIssues.length) % mockIssues.length)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h2 className="text-white text-xl font-semibold">Loading...</h2>
+        </div>
+      </div>
+    )
+  }
+
+  if (isAuthenticated) {
+    return null // Will redirect to map
   }
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Hero Section with Navigation */}
-      <HeroSectionComponent isLoggedIn={isLoggedIn} />
+      <HeroSectionComponent isLoggedIn={false} />
 
-      {/* Ticker */}
-      <div className="bg-black border-b border-white/10 py-2 overflow-hidden">
-        <div className="flex items-center justify-center text-sm text-gray-300">
-          <MapPin className="w-4 h-4 mr-2 text-green-400" />
-          <span>Check out our interactive map to see real-time community issues</span>
-          <Link href="/map" className="ml-2 text-green-400 hover:text-green-300 underline">
-            View Map →
-          </Link>
-        </div>
-      </div>
+      {/* Features Section */}
+      <section id="features" className="py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Why Choose CivicTract?
+            </h2>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              Our platform makes civic engagement simple, transparent, and effective.
+            </p>
+          </div>
 
-      {/* Stats Section */}
-      <section className="py-20 bg-black">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {[
-              { label: "Active Citizens", value: "12,847", icon: Users },
-              { label: "Issues Reported", value: "3,429", icon: AlertTriangle },
-              { label: "Issues Resolved", value: "2,891", icon: CheckCircle },
-              { label: "Success Rate", value: "84%", icon: TrendingUp },
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-              >
-                <Card className="bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/20 transition-all duration-500 backdrop-blur-sm">
-                  <CardContent className="p-8 text-center">
-                    <div className="inline-flex items-center justify-center w-14 h-14 bg-white/5 border border-white/10 rounded-2xl mb-6 group-hover:bg-white/10 transition-all duration-300">
-                      <stat.icon className="w-7 h-7 text-white/80" />
-                    </div>
-                    <div className="text-3xl font-bold text-white mb-2 tracking-tight">{stat.value}</div>
-                    <div className="text-sm text-gray-400 font-medium">{stat.label}</div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+          <div className="grid md:grid-cols-3 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-center"
+            >
+              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <MapPin className="w-8 h-8 text-blue-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-4">Location-Based Reporting</h3>
+              <p className="text-gray-400">
+                Report issues with precise location data and get updates on nearby problems.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-center"
+            >
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <TrendingUp className="w-8 h-8 text-green-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-4">Real-Time Tracking</h3>
+              <p className="text-gray-400">
+                Follow the progress of your reports with real-time status updates and notifications.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-center"
+            >
+              <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Users className="w-8 h-8 text-purple-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-4">Community Engagement</h3>
+              <p className="text-gray-400">
+                Connect with neighbors, vote on issues, and build stronger communities together.
+              </p>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Issues Section */}
-      <section className="py-24 bg-black">
-        <div className="container mx-auto px-4">
+      {/* Recent Issues Section */}
+      <section className="py-20 px-4 bg-gray-900/50">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Recent Community Reports</h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              See what your neighbors are reporting and track the progress of issues in your area.
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Recent Community Issues
+            </h2>
+            <p className="text-xl text-gray-400">
+              See what's happening in communities around the world
             </p>
           </div>
 
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-16">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                placeholder="Search issues in your community..."
-                className="pl-12 h-14 text-lg border-gray-800 bg-gray-900/50 text-white rounded-xl focus:border-gray-700 focus:bg-gray-900/70 transition-all"
-              />
-              <Button className="absolute right-2 top-2 h-10 px-6 bg-white text-black hover:bg-gray-100">Search</Button>
-            </div>
-          </div>
-
-          {/* Issues Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-16">
-            {currentIssues.map((issue, index) => (
-              <motion.div
-                key={issue.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+          <div className="relative">
+            <div className="flex items-center justify-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={prevIssue}
+                className="text-gray-400 hover:text-white mr-4"
               >
-                <Link href={`/issue/${issue.id}`} className="block h-full">
-                  <Card className="h-full bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-white/20 transition-all duration-500 group cursor-pointer overflow-hidden backdrop-blur-sm hover:scale-[1.02]">
-                    {/* Rest of the card content remains the same */}
-                    <div className="relative overflow-hidden">
+                <ChevronLeft className="w-6 h-6" />
+              </Button>
+
+              <div className="max-w-2xl mx-auto">
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
                       <img
-                        src={issue.image || "/placeholder.svg"}
-                        alt={issue.title}
-                        className="w-full h-52 object-cover group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+                        src={mockIssues[currentIssueIndex].image}
+                        alt={mockIssues[currentIssueIndex].title}
+                        className="w-24 h-24 object-cover rounded-lg"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                      {/* Status Badge */}
-                      <div className="absolute top-5 left-5">
-                        <Badge
-                          className={`${getStatusColor(issue.status)} flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border backdrop-blur-md`}
-                        >
-                          {getStatusIcon(issue.status)}
-                          {issue.status}
-                        </Badge>
-                      </div>
-
-                      {/* Category Badge */}
-                      <div className="absolute top-5 right-5">
-                        <Badge className="bg-black/40 text-white/90 border-0 backdrop-blur-md px-3 py-1.5 text-xs font-medium">
-                          {issue.category}
-                        </Badge>
-                      </div>
-
-                      {/* Priority Indicator */}
-                      <div className="absolute bottom-4 right-4">
-                        <div
-                          className={`w-3 h-3 rounded-full ${
-                            issue.priority === "High"
-                              ? "bg-red-400"
-                              : issue.priority === "Medium"
-                                ? "bg-yellow-400"
-                                : "bg-green-400"
-                          } shadow-lg`}
-                        />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className={getStatusColor(mockIssues[currentIssueIndex].status)}>
+                            <div className="flex items-center gap-1">
+                              {getStatusIcon(mockIssues[currentIssueIndex].status)}
+                              {mockIssues[currentIssueIndex].status}
+                            </div>
+                          </Badge>
+                          <Badge className="bg-red-500/20 text-red-300 border-red-500/30">
+                            {mockIssues[currentIssueIndex].priority}
+                          </Badge>
+                        </div>
+                        <h3 className="text-lg font-semibold text-white mb-2">
+                          {mockIssues[currentIssueIndex].title}
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-3">
+                          {mockIssues[currentIssueIndex].description}
+                        </p>
+                        <div className="flex items-center justify-between text-sm text-gray-500">
+                          <span>{mockIssues[currentIssueIndex].location}</span>
+                          <span>{mockIssues[currentIssueIndex].reportedAt}</span>
+                        </div>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-                    <CardContent className="p-6 space-y-4">
-                      {/* Title */}
-                      <h3 className="text-lg font-semibold text-white group-hover:text-white/90 transition-colors line-clamp-2 leading-tight">
-                        {issue.title}
-                      </h3>
-
-                      {/* Description */}
-                      <p className="text-sm text-gray-400 line-clamp-2 leading-relaxed">{issue.description}</p>
-
-                      {/* Location & Time */}
-                      <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-white/5">
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                          <span className="truncate font-medium">{issue.location}</span>
-                        </div>
-                        <span className="flex-shrink-0 text-gray-400">{issue.reportedAt}</span>
-                      </div>
-
-                      {/* Footer */}
-                      <div className="flex items-center justify-between pt-3">
-                        <div className="flex items-center gap-4 text-xs">
-                          <div className="flex items-center gap-1.5 text-gray-400">
-                            <Users className="w-3.5 h-3.5" />
-                            <span className="font-semibold text-white">{issue.votes}</span>
-                            <span>votes</span>
-                          </div>
-                          <span className="text-gray-500">by {issue.reportedBy}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-gray-400 hover:text-white hover:bg-white/5 p-2 rounded-lg transition-all duration-300"
-                        >
-                          <ArrowRight className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="bg-gray-900/50 border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <Button
-                key={page}
-                variant={currentPage === page ? "default" : "outline"}
+                variant="ghost"
                 size="sm"
-                onClick={() => setCurrentPage(page)}
-                className={
-                  currentPage === page
-                    ? "bg-white text-black hover:bg-gray-100"
-                    : "bg-gray-900/50 border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white"
-                }
+                onClick={nextIssue}
+                className="text-gray-400 hover:text-white ml-4"
               >
-                {page}
+                <ChevronRight className="w-6 h-6" />
               </Button>
-            ))}
+            </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="bg-gray-900/50 border-gray-800 text-gray-300 hover:bg-gray-800 hover:text-white"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+            <div className="flex justify-center mt-6">
+              <div className="flex gap-2">
+                {mockIssues.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentIssueIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentIssueIndex ? "bg-blue-500" : "bg-gray-600"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-black">
-        <div className="container mx-auto px-4 text-center">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">Ready to make a difference?</h2>
-            <p className="text-xl mb-12 max-w-2xl mx-auto text-gray-400 leading-relaxed">
-              Join thousands of citizens who are actively improving their communities. Your voice matters, and together
-              we can create positive change.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {isLoggedIn ? (
-                <>
-                  <Button
-                    size="lg"
-                    className="text-lg px-8 py-4 bg-white text-black hover:bg-gray-100 shadow-lg"
-                    asChild
-                  >
-                    <Link href="/report">Report New Issue</Link>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="text-lg px-8 py-4 border-2 border-gray-700 text-gray-300 hover:bg-gray-900 hover:text-white bg-transparent transition-all duration-200"
-                    asChild
-                  >
-                    <Link href="/my-issues">My Issues</Link>
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    size="lg"
-                    className="text-lg px-8 py-4 bg-white text-black hover:bg-gray-100 shadow-lg"
-                    asChild
-                  >
-                    <Link href="/report">Report Your First Issue</Link>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="text-lg px-8 py-4 border-2 border-gray-700 text-gray-300 hover:bg-gray-900 hover:text-white bg-transparent transition-all duration-200"
-                    onClick={() => setIsLoggedIn(!isLoggedIn)}
-                  >
-                    {isLoggedIn ? "Sign Out" : "Sign In to Get Started"}
-                  </Button>
-                </>
-              )}
-            </div>
+      <section className="py-20 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl font-bold text-white mb-6">
+            Ready to Make a Difference?
+          </h2>
+          <p className="text-xl text-gray-400 mb-8">
+            Join thousands of citizens who are already making their communities better.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/signup">
+              <Button size="lg" className="bg-blue-500 hover:bg-blue-600 text-white">
+                Get Started Free
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button variant="outline" size="lg" className="border-gray-600 text-white hover:bg-gray-800">
+                Sign In
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

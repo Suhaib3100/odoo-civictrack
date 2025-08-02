@@ -1,17 +1,19 @@
 "use client"
 
 import type React from "react"
-
+import { useState } from "react"
 import { SignInPage, type Testimonial } from "@/components/ui/sign-in"
 import { BackNavigation } from "@/components/ui/back-navigation"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import { toast } from "sonner"
 
 const civicTestimonials: Testimonial[] = [
   {
     avatarSrc: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
     name: "Priya Sharma",
     handle: "@priya_civic",
-    text: "CivicTrack helped me report a pothole that was fixed within a week. Amazing platform for community engagement!",
+    text: "CivicTract helped me report a pothole that was fixed within a week. Amazing platform for community engagement!",
   },
   {
     avatarSrc: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
@@ -29,44 +31,38 @@ const civicTestimonials: Testimonial[] = [
 
 export function LoginPage() {
   const router = useRouter()
+  const { login, loading } = useAuth()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSignIn = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const data = Object.fromEntries(formData.entries())
+    setIsSubmitting(true)
 
-    console.log("Sign In submitted:", data)
+    try {
+      const formData = new FormData(event.currentTarget)
+      const email = formData.get('email') as string
+      const password = formData.get('password') as string
 
-    // Simulate successful login
-    localStorage.setItem(
-      "civictrack_user",
-      JSON.stringify({
-        email: data.email,
-        name: "John Doe",
-        isLoggedIn: true,
-      }),
-    )
+      if (!email || !password) {
+        toast.error('Please fill in all fields')
+        return
+      }
 
-    // Redirect to home page
-    router.push("/")
+      await login(email, password)
+    } catch (error: any) {
+      console.error('Login failed:', error)
+      toast.error(error.message || 'Login failed. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleGoogleSignIn = () => {
-    console.log("Continue with Google clicked")
-    // Simulate Google login
-    localStorage.setItem(
-      "civictrack_user",
-      JSON.stringify({
-        email: "user@gmail.com",
-        name: "Google User",
-        isLoggedIn: true,
-      }),
-    )
-    router.push("/")
+    toast.info('Google sign-in will be available soon!')
   }
 
   const handleResetPassword = () => {
-    alert("Password reset link sent to your email!")
+    router.push('/forgot-password')
   }
 
   const handleCreateAccount = () => {

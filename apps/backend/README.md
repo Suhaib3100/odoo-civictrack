@@ -1,200 +1,345 @@
-# CivicTract Backend
+# CivicTract Backend API
 
-Express.js backend API for the CivicTract civic issue reporting application.
+A comprehensive Express.js backend for the CivicTract civic issue reporting application with full authentication, user management, issue tracking, and admin functionality.
 
-## Features
+## 🚀 Features
 
-- **Authentication & Authorization**: JWT-based authentication with role-based access control
-- **Issue Management**: CRUD operations for civic issues with location-based filtering
-- **User Management**: User profiles, registration, and admin controls
-- **File Upload**: Image upload with processing and optimization
-- **Admin Dashboard**: Comprehensive admin interface with statistics and controls
-- **Database**: PostgreSQL with Prisma ORM
-- **Security**: Rate limiting, CORS, helmet, input validation
-- **Error Handling**: Comprehensive error handling and logging
+### Authentication & Authorization
+- **JWT-based authentication** with access and refresh tokens
+- **Role-based access control** (USER, MODERATOR, ADMIN)
+- **Password reset** functionality
+- **Account management** (profile updates, password changes)
+- **Secure password hashing** with bcrypt
+- **Rate limiting** for auth endpoints
 
-## Tech Stack
+### User Management
+- **User registration** and login
+- **Profile management** with avatar support
+- **User statistics** and activity tracking
+- **Account deletion** with cascade cleanup
+- **User search** and filtering (admin/moderator)
 
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: JWT with bcrypt
-- **File Upload**: Multer with Sharp for image processing
-- **Validation**: Express-validator and Joi
-- **Security**: Helmet, CORS, Rate Limiting
+### Issue Management
+- **CRUD operations** for civic issues
+- **Location-based filtering** with coordinates
+- **Category and status management**
+- **Image upload** and processing
+- **Voting system** (upvote/downvote)
+- **Commenting system** with public/private options
+- **Issue updates** and status tracking
 
-## Prerequisites
+### Admin Dashboard
+- **Comprehensive analytics** and statistics
+- **User management** with role assignment
+- **Issue moderation** and status updates
+- **System monitoring** and reporting
+- **Bulk operations** and filtering
 
-- Node.js (v16 or higher)
+### File Upload System
+- **Image processing** with Sharp
+- **Multiple file upload** support
+- **Avatar generation** with automatic resizing
+- **File validation** and security
+- **Storage management** with cleanup
+
+## 📋 Prerequisites
+
+- Node.js (v18 or higher)
 - PostgreSQL database
-- npm or yarn
+- npm or yarn package manager
 
-## Installation
+## 🛠️ Installation
 
-1. **Install dependencies**:
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd apps/backend
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. **Set up environment variables**:
-   Create a `.env` file in the root directory:
+3. **Environment Setup**
+   Create a `.env` file in the backend directory:
    ```env
-   # Database
-   DATABASE_URL="your-prisma-postgresql-connection-string"
+   # Database Configuration
+   DATABASE_URL="postgresql://username:password@localhost:5432/civictract_db"
    
-   # Server
+   # JWT Configuration
+   JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+   JWT_EXPIRES_IN="7d"
+   
+   # Server Configuration
    PORT=5000
-   NODE_ENV=development
+   NODE_ENV="development"
    
-   # JWT
-   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-   JWT_EXPIRES_IN=7d
+   # Frontend URL for CORS
+   FRONTEND_URL="http://localhost:3000"
    
-   # Frontend URL
-   FRONTEND_URL=http://localhost:3000
-   
-   # File Upload
+   # File Upload Configuration
    MAX_FILE_SIZE=10485760
-   UPLOAD_PATH=./uploads
+   UPLOAD_PATH="./uploads"
    
    # Rate Limiting
    RATE_LIMIT_WINDOW_MS=900000
    RATE_LIMIT_MAX_REQUESTS=100
    ```
 
-3. **Set up the database**:
+4. **Database Setup**
    ```bash
    # Generate Prisma client
    npm run db:generate
    
    # Push schema to database
    npm run db:push
+   
+   # Or run migrations
+   npm run db:migrate
    ```
 
-4. **Start the development server**:
+5. **Start the server**
    ```bash
    npm run dev
    ```
 
-## Available Scripts
+## 🗄️ Database Schema
 
-- `npm start` - Start production server
-- `npm run dev` - Start development server with nodemon
-- `npm test` - Run tests
-- `npm run lint` - Run ESLint
-- `npm run db:generate` - Generate Prisma client
-- `npm run db:push` - Push schema to database
-- `npm run db:migrate` - Run database migrations
-- `npm run db:studio` - Open Prisma Studio
+The application uses Prisma with PostgreSQL and includes the following models:
 
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user
-
-### Issues
-- `GET /api/issues` - Get all issues (with filtering)
-- `GET /api/issues/:id` - Get single issue
-- `POST /api/issues` - Create new issue
-- `PUT /api/issues/:id` - Update issue
-- `DELETE /api/issues/:id` - Delete issue
-
-### Users
-- `GET /api/users/profile` - Get user profile
-- `PUT /api/users/profile` - Update user profile
-- `PUT /api/users/change-password` - Change password
-- `GET /api/users/my-issues` - Get user's issues
-- `GET /api/users` - Get all users (Admin only)
-
-### Admin
-- `GET /api/admin/dashboard` - Get admin dashboard stats
-- `GET /api/admin/issues` - Get all issues with admin controls
-- `PUT /api/admin/issues/:id/status` - Update issue status
-- `DELETE /api/admin/issues/:id` - Delete issue (Admin only)
-- `PUT /api/admin/users/:id/role` - Update user role
-- `PUT /api/admin/users/:id/toggle-status` - Toggle user status
-
-### Upload
-- `POST /api/upload/image` - Upload single image
-- `POST /api/upload/images` - Upload multiple images
-- `DELETE /api/upload/:filename` - Delete uploaded file
-
-## Database Schema
-
-The application uses the following main entities:
-
-- **User**: User accounts with roles and profiles
-- **Issue**: Civic issues with location, category, and status
-- **Comment**: Comments on issues
+- **User**: Authentication, profiles, roles
+- **Issue**: Civic issues with location, status, categories
+- **Comment**: User comments on issues
 - **Vote**: User votes on issues
 - **IssueUpdate**: Status updates and progress tracking
-- **Admin**: Admin accounts for system management
+- **Admin**: Separate admin accounts
 
-## Security Features
+## 📚 API Endpoints
 
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt for password security
-- **Rate Limiting**: Prevents abuse with configurable limits
-- **Input Validation**: Comprehensive validation using express-validator and Joi
-- **CORS**: Configured for frontend integration
-- **Helmet**: Security headers
-- **File Upload Security**: File type and size validation
+### Authentication (`/api/auth`)
 
-## Error Handling
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| POST | `/register` | Register new user | Public |
+| POST | `/login` | User login | Public |
+| POST | `/refresh` | Refresh access token | Public |
+| POST | `/logout` | User logout | Private |
+| GET | `/me` | Get current user | Private |
+| PUT | `/profile` | Update user profile | Private |
+| PUT | `/change-password` | Change password | Private |
+| POST | `/forgot-password` | Request password reset | Public |
+| POST | `/reset-password` | Reset password with token | Public |
 
-The application includes comprehensive error handling:
+### Users (`/api/users`)
 
-- **Validation Errors**: Detailed validation error messages
-- **Authentication Errors**: Proper 401/403 responses
-- **Database Errors**: Prisma error handling
-- **File Upload Errors**: Multer error handling
-- **General Errors**: 500 error responses with optional stack traces in development
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| GET | `/profile` | Get user profile | Private |
+| PUT | `/profile` | Update user profile | Private |
+| GET | `/issues` | Get user's issues | Private |
+| GET | `/comments` | Get user's comments | Private |
+| GET | `/votes` | Get user's votes | Private |
+| GET | `/stats` | Get user statistics | Private |
+| GET | `/search` | Search users | Admin/Moderator |
+| GET | `/:id` | Get user by ID | Admin/Moderator |
+| DELETE | `/account` | Delete user account | Private |
 
-## Development
+### Issues (`/api/issues`)
 
-### Project Structure
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| GET | `/` | Get all issues with filters | Public |
+| GET | `/:id` | Get single issue | Public |
+| POST | `/` | Create new issue | Private |
+| PUT | `/:id` | Update issue | Private (Owner/Admin) |
+| DELETE | `/:id` | Delete issue | Private (Owner/Admin) |
+| POST | `/:id/vote` | Vote on issue | Private |
+| DELETE | `/:id/vote` | Remove vote | Private |
+| POST | `/:id/comments` | Add comment | Private |
+| PUT | `/:issueId/comments/:commentId` | Update comment | Private (Owner/Admin) |
+| DELETE | `/:issueId/comments/:commentId` | Delete comment | Private (Owner/Admin) |
+
+### Admin (`/api/admin`)
+
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| GET | `/dashboard` | Admin dashboard stats | Admin |
+| GET | `/users` | Get all users | Admin |
+| PUT | `/users/:id/role` | Update user role | Admin |
+| PUT | `/users/:id/toggle-status` | Toggle user status | Admin |
+| GET | `/issues` | Get all issues | Admin |
+| PUT | `/issues/:id/status` | Update issue status | Admin |
+| DELETE | `/issues/:id` | Delete issue | Admin |
+| GET | `/analytics` | Get analytics data | Admin |
+
+### Upload (`/api/upload`)
+
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| POST | `/image` | Upload single image | Private |
+| POST | `/images` | Upload multiple images | Private |
+| POST | `/avatar` | Upload avatar image | Private |
+| GET | `/` | List uploaded files | Private |
+| GET | `/:filename` | Get file info | Private |
+| DELETE | `/:filename` | Delete file | Private |
+
+## 🔐 Authentication
+
+The API uses JWT tokens for authentication:
+
+1. **Login/Register** returns access and refresh tokens
+2. **Access tokens** expire in 7 days (configurable)
+3. **Refresh tokens** expire in 30 days
+4. **Protected routes** require `Authorization: Bearer <token>` header
+
+### Token Structure
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "user_id",
+      "email": "user@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "USER"
+    },
+    "accessToken": "jwt_access_token",
+    "refreshToken": "jwt_refresh_token"
+  }
+}
 ```
-src/
-├── config/
-│   └── database.js      # Database configuration
-├── middleware/
-│   ├── auth.js          # Authentication middleware
-│   ├── errorHandler.js  # Error handling middleware
-│   └── notFound.js      # 404 middleware
-├── routes/
-│   ├── auth.js          # Authentication routes
-│   ├── issues.js        # Issue management routes
-│   ├── users.js         # User management routes
-│   ├── admin.js         # Admin routes
-│   └── upload.js        # File upload routes
-├── utils/
-│   └── validation.js    # Validation schemas
-└── server.js            # Main server file
+
+## 🛡️ Security Features
+
+- **Password hashing** with bcrypt (12 rounds)
+- **JWT token validation** with expiration
+- **Rate limiting** on auth endpoints
+- **Input validation** with express-validator
+- **CORS protection** with configurable origins
+- **Helmet.js** for security headers
+- **File upload validation** and processing
+- **SQL injection protection** via Prisma
+
+## 📊 Response Format
+
+All API responses follow a consistent format:
+
+### Success Response
+```json
+{
+  "success": true,
+  "message": "Operation completed successfully",
+  "data": {
+    // Response data
+  }
+}
 ```
+
+### Error Response
+```json
+{
+  "success": false,
+  "error": "Error message",
+  "details": [
+    // Validation errors (if applicable)
+  ]
+}
+```
+
+## 🔧 Configuration
 
 ### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | Required |
+| `JWT_SECRET` | Secret for JWT signing | Required |
+| `JWT_EXPIRES_IN` | JWT expiration time | "7d" |
 | `PORT` | Server port | 5000 |
-| `NODE_ENV` | Environment | development |
-| `JWT_SECRET` | JWT signing secret | Required |
-| `JWT_EXPIRES_IN` | JWT expiration time | 7d |
-| `FRONTEND_URL` | Frontend URL for CORS | http://localhost:3000 |
-| `MAX_FILE_SIZE` | Maximum file upload size | 10485760 (10MB) |
-| `UPLOAD_PATH` | File upload directory | ./uploads |
+| `NODE_ENV` | Environment mode | "development" |
+| `FRONTEND_URL` | Frontend URL for CORS | "http://localhost:3000" |
+| `MAX_FILE_SIZE` | Max file upload size | 10485760 (10MB) |
+| `UPLOAD_PATH` | Upload directory path | "./uploads" |
 
-## Deployment
+### Rate Limiting
 
-1. Set up a PostgreSQL database
-2. Configure environment variables
-3. Run database migrations: `npm run db:push`
-4. Start the server: `npm start`
+- **Auth endpoints**: 5 requests per 15 minutes
+- **General endpoints**: 100 requests per 15 minutes
+- **File uploads**: 10 requests per 15 minutes
 
-## Contributing
+## 🚀 Deployment
+
+### Production Checklist
+
+1. **Environment Variables**
+   - Set `NODE_ENV=production`
+   - Use strong `JWT_SECRET`
+   - Configure production database URL
+   - Set appropriate CORS origins
+
+2. **Database**
+   - Run migrations: `npm run db:migrate`
+   - Ensure database backups
+
+3. **File Storage**
+   - Configure cloud storage (AWS S3, etc.)
+   - Set up CDN for static files
+
+4. **Security**
+   - Enable HTTPS
+   - Configure firewall rules
+   - Set up monitoring and logging
+
+### Docker Deployment
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run db:generate
+EXPOSE 5000
+CMD ["npm", "start"]
+```
+
+## 📝 Development
+
+### Available Scripts
+
+```bash
+npm run dev          # Start development server
+npm start            # Start production server
+npm run test         # Run tests
+npm run lint         # Run ESLint
+npm run db:generate  # Generate Prisma client
+npm run db:push      # Push schema to database
+npm run db:migrate   # Run database migrations
+npm run db:studio    # Open Prisma Studio
+```
+
+### Database Commands
+
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Push schema changes
+npx prisma db push
+
+# Create migration
+npx prisma migrate dev --name migration_name
+
+# Reset database
+npx prisma migrate reset
+
+# Open Prisma Studio
+npx prisma studio
+```
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -202,6 +347,17 @@ src/
 4. Add tests if applicable
 5. Submit a pull request
 
-## License
+## 📄 License
 
-ISC 
+This project is licensed under the ISC License.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the API documentation
+- Review the database schema
+
+---
+
+**CivicTract Backend** - Empowering communities through civic engagement 
