@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Development
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: civictrack-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: civictrack_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
+    networks:
+      - civictrack-dev-network
+
+  # Redis for Development
+  redis-dev:
+    image: redis:7-alpine
+    container_name: civictrack-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis123
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6380:6379"
+    networks:
+      - civictrack-dev-network
+
+  # Backend Development Service with Hot Reload
+  backend-dev:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.dev
+    container_name: civictrack-backend-dev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:postgres123@postgres-dev:5432/civictrack_dev
+      - REDIS_URL=redis://:redis123@redis-dev:6379
+      - JWT_SECRET=dev-jwt-secret-key
+      - PORT=8000
+    ports:
+      - "8001:8000"
+    depends_on:
+      - postgres-dev
+      - redis-dev
+    networks:
+      - civictrack-dev-network
+    volumes:
+      - ./apps/backend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Frontend Development Service with Hot Reload
+  frontend-dev:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.dev
+    container_name: civictrack-frontend-dev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8001
+      - NEXTAUTH_SECRET=dev-nextauth-secret
+      - NEXTAUTH_URL=http://localhost:3001
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend-dev
+    networks:
+      - civictrack-dev-network
+    volumes:
+      - ./apps/frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+
+  # Adminer for Database Management
+  adminer:
+    image: adminer:latest
+    container_name: civictrack-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres-dev
+    depends_on:
+      - postgres-dev
+    networks:
+      - civictrack-dev-network
+
+  # MailHog for Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: civictrack-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    networks:
+      - civictrack-dev-network
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+
+networks:
+  civictrack-dev-network:
+    driver: bridge

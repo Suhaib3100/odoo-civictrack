@@ -1,0 +1,47 @@
+{
+  "name": "@civictrack/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities and types for CivicTrack application",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix"
+  },
+  "keywords": [
+    "civictrack",
+    "shared",
+    "utilities",
+    "types"
+  ],
+  "author": "CivicTrack Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "zod": "^3.22.0",
+    "date-fns": "^2.30.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Suhaib3100/odoo-civictrack",
+    "directory": "packages/shared"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
